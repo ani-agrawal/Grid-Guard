@@ -3,6 +3,10 @@ import { DashboardHeader } from "@/components/Dashboard/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, TrendingUp, TrendingDown, Activity, Shield, AlertTriangle } from "lucide-react";
+import { ForecastChart } from "@/components/MarketDetail/ForecastChart";
+import { RiskTape } from "@/components/MarketDetail/RiskTape";
+import { EvidencePanel } from "@/components/MarketDetail/EvidencePanel";
+import { ThreatAssetGraph } from "@/components/MarketDetail/ThreatAssetGraph";
 import {
   LineChart,
   Line,
@@ -226,132 +230,64 @@ const MarketDetail = () => {
         </div>
 
         {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Left Column - Forecasts */}
+          <div className="lg:col-span-2 space-y-6">
+            <ForecastChart />
+            
+            {/* Price History */}
+            <Card className="p-6 bg-gradient-card border-border">
+              <h3 className="text-lg font-semibold text-foreground mb-4">
+                5-Day Price History
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={market.priceHistory}>
+                  <defs>
+                    <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis
+                    dataKey="time"
+                    stroke="hsl(var(--muted-foreground))"
+                    style={{ fontSize: "12px" }}
+                  />
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    style={{ fontSize: "12px" }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="price"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorPrice)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Card>
+          </div>
+
+          {/* Right Column - Risk Tape */}
+          <div>
+            <RiskTape />
+          </div>
+        </div>
+
+        {/* Evidence & Threat Intelligence */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Price History */}
-          <Card className="p-6 bg-gradient-card border-border">
-            <h3 className="text-lg font-semibold text-foreground mb-4">
-              5-Day Price History
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={market.priceHistory}>
-                <defs>
-                  <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="time"
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="price"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorPrice)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </Card>
-
-          {/* Volume & Volatility */}
-          <Card className="p-6 bg-gradient-card border-border">
-            <h3 className="text-lg font-semibold text-foreground mb-4">
-              Volume & Volatility
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={market.priceHistory}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="time"
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="volume" fill="hsl(var(--primary))" name="Volume (k)" />
-                <Bar dataKey="volatility" fill="hsl(var(--accent))" name="Volatility %" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-
-          {/* Risk Correlation */}
-          <Card className="p-6 bg-gradient-card border-border lg:col-span-2">
-            <h3 className="text-lg font-semibold text-foreground mb-4">
-              24h Risk Correlation Analysis
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={market.correlationData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="hour"
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="price"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  name="Price"
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="cyber"
-                  stroke="hsl(var(--cyber))"
-                  strokeWidth={2}
-                  name="Cyber Risk"
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="geo"
-                  stroke="hsl(var(--geopolitical))"
-                  strokeWidth={2}
-                  name="Geo Risk"
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </Card>
+          <EvidencePanel />
+          <ThreatAssetGraph />
         </div>
 
         {/* Risk Factors */}
