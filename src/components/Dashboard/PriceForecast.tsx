@@ -1,23 +1,27 @@
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, TrendingDown } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useEnergyPrices } from "@/hooks/useEnergyPrices";
 import { useCurrencyConversion } from "@/hooks/useCurrencyConversion";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface ForecastData {
+interface TimeSeriesPoint {
+  time: string;
+  price: number;
+  baseline?: number;
+  riskAdjusted?: number;
+  confidenceLow?: number;
+  confidenceHigh?: number;
+}
+
+interface RegionForecast {
   region: string;
-  currentPrice: string;
-  forecast: string;
-  change: number;
-  cyberRisk: string;
-  geoRisk: string;
-  confidenceLow: number;
-  confidenceHigh: number;
-  baselineChange: number;
+  marketType: string;
+  data: TimeSeriesPoint[];
+  currentPrice: number;
 }
 
 export const PriceForecast = () => {
@@ -25,28 +29,47 @@ export const PriceForecast = () => {
   const { convertPrice } = useCurrencyConversion();
   const [showAdjusted, setShowAdjusted] = useState(true);
 
-  const generateForecasts = (): ForecastData[] => {
+  const generateForecasts = (): RegionForecast[] => {
     if (!data?.energyPrices) return [];
     
     return data.energyPrices.slice(0, 3).map(price => {
-      const baselineChange = (Math.random() * 8) - 2; // -2% to +6% baseline
-      const riskPremium = (Math.random() * 4) + 1; // +1% to +5% risk premium
-      const forecastChange = showAdjusted ? baselineChange + riskPremium : baselineChange;
-      const forecastPrice = price.price * (1 + forecastChange / 100);
+      const timePoints: TimeSeriesPoint[] = [];
+      const now = new Date();
       
-      // Confidence interval: ±3% around forecast
-      const ciRange = 3;
+      // Generate 48 hours of forecast data (hourly)
+      for (let i = 0; i <= 48; i++) {
+        const hour = new Date(now.getTime() + i * 60 * 60 * 1000);
+        const timeStr = i === 0 ? 'Now' : `+${i}h`;
+        
+        // Add some realistic volatility
+        const baseVolatility = (Math.sin(i / 8) * 2) + (Math.random() * 2 - 1);
+        const trendFactor = i * 0.05; // Slight upward trend
+        
+        const baselineChange = baseVolatility + trendFactor;
+        const riskPremium = 1 + (Math.random() * 2); // +1% to +3% risk premium
+        
+        const baselinePrice = price.price * (1 + baselineChange / 100);
+        const riskAdjustedPrice = price.price * (1 + (baselineChange + riskPremium) / 100);
+        
+        // Confidence bands (±3%)
+        const confidenceLow = riskAdjustedPrice * 0.97;
+        const confidenceHigh = riskAdjustedPrice * 1.03;
+        
+        timePoints.push({
+          time: timeStr,
+          price: i === 0 ? price.price : (showAdjusted ? riskAdjustedPrice : baselinePrice),
+          baseline: baselinePrice,
+          riskAdjusted: riskAdjustedPrice,
+          confidenceLow,
+          confidenceHigh,
+        });
+      }
       
       return {
-        region: `${price.region} (${price.marketType})`,
-        currentPrice: `${convertPrice(price.price)}${price.marketType === "Electricity" ? "/MWh" : "/MMBtu"}`,
-        forecast: `${convertPrice(forecastPrice)}${price.marketType === "Electricity" ? "/MWh" : "/MMBtu"}`,
-        change: forecastChange,
-        cyberRisk: price.threatLevel === "High" ? "Elevated" : price.threatLevel === "Medium" ? "Moderate" : "Low",
-        geoRisk: price.forecast === "Bullish" ? "Elevated" : price.forecast === "Bearish" ? "Moderate" : "Stable",
-        confidenceLow: forecastChange - ciRange,
-        confidenceHigh: forecastChange + ciRange,
-        baselineChange,
+        region: price.region,
+        marketType: price.marketType,
+        data: timePoints,
+        currentPrice: price.price,
       };
     });
   };
@@ -88,63 +111,112 @@ export const PriceForecast = () => {
           </Label>
         </div>
       </div>
-      <div className="space-y-4">
+      
+      <Tabs defaultValue={forecasts[0]?.region || "region-0"} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-4">
+          {forecasts.map((forecast, idx) => (
+            <TabsTrigger key={forecast.region} value={forecast.region}>
+              {forecast.region}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        
         {forecasts.map((forecast) => (
-          <div
-            key={forecast.region}
-            className="p-4 rounded-lg bg-secondary/50 border border-border"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h4 className="font-medium text-foreground">
-                  {forecast.region}
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Current: {forecast.currentPrice}
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center gap-1 mb-1">
-                  {forecast.change > 0 ? (
-                    <TrendingUp className="h-4 w-4 text-destructive" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4 text-success" />
-                  )}
-                  <span
-                    className={cn(
-                      "text-lg font-bold",
-                      forecast.change > 0 ? "text-destructive" : "text-success"
-                    )}
-                  >
-                    {forecast.change > 0 ? "+" : ""}
-                    {forecast.change.toFixed(1)}%
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground mb-0.5">
-                  {forecast.forecast}
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  CI90: {forecast.confidenceLow > 0 ? "+" : ""}{forecast.confidenceLow.toFixed(1)}% to +{forecast.confidenceHigh.toFixed(1)}%
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-4 text-xs">
-              <div>
-                <span className="text-muted-foreground">Cyber: </span>
-                <span className="text-cyber font-medium">
-                  {forecast.cyberRisk}
+          <TabsContent key={forecast.region} value={forecast.region} className="space-y-4">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                Current Price: <span className="font-semibold text-foreground">
+                  {convertPrice(forecast.currentPrice)}{forecast.marketType === "Electricity" ? "/MWh" : "/MMBtu"}
                 </span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Geo: </span>
-                <span className="text-geopolitical font-medium">
-                  {forecast.geoRisk}
-                </span>
-              </div>
+              </span>
+              <span className="text-muted-foreground">
+                Market: <span className="font-semibold text-foreground">{forecast.marketType}</span>
+              </span>
             </div>
-          </div>
+            
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={forecast.data}>
+                <defs>
+                  <linearGradient id="confidenceGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis 
+                  dataKey="time" 
+                  stroke="hsl(var(--muted-foreground))"
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))"
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  tickFormatter={(value) => `$${value.toFixed(0)}`}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                  }}
+                  labelStyle={{ color: 'hsl(var(--foreground))' }}
+                  formatter={(value: number) => [`$${value.toFixed(2)}`, '']}
+                />
+                <Legend 
+                  wrapperStyle={{
+                    paddingTop: '20px',
+                  }}
+                />
+                
+                {showAdjusted && (
+                  <>
+                    <Area
+                      type="monotone"
+                      dataKey="confidenceHigh"
+                      stackId="1"
+                      stroke="none"
+                      fill="url(#confidenceGradient)"
+                      fillOpacity={0.3}
+                      name="Upper Confidence"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="confidenceLow"
+                      stackId="1"
+                      stroke="none"
+                      fill="url(#confidenceGradient)"
+                      fillOpacity={0.3}
+                      name="Lower Confidence"
+                    />
+                  </>
+                )}
+                
+                <Line
+                  type="monotone"
+                  dataKey={showAdjusted ? "riskAdjusted" : "baseline"}
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={3}
+                  dot={false}
+                  name={showAdjusted ? "Risk-Adjusted" : "Baseline"}
+                />
+                
+                {!showAdjusted && (
+                  <Line
+                    type="monotone"
+                    dataKey="riskAdjusted"
+                    stroke="hsl(var(--destructive))"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                    name="Risk-Adjusted (ref)"
+                  />
+                )}
+              </AreaChart>
+            </ResponsiveContainer>
+          </TabsContent>
         ))}
-      </div>
+      </Tabs>
     </Card>
   );
 };
