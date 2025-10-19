@@ -47,6 +47,10 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: "hsl(var(--success))",
+        warning: "hsl(var(--warning))",
+        cyber: "hsl(var(--cyber))",
+        geopolitical: "hsl(var(--geopolitical))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -57,6 +61,17 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+      backgroundImage: {
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-cyber": "var(--gradient-cyber)",
+        "gradient-geo": "var(--gradient-geo)",
+        "gradient-card": "var(--gradient-card)",
+      },
+      boxShadow: {
+        "glow-primary": "var(--glow-primary)",
+        "glow-cyber": "var(--glow-cyber)",
+        "glow-geo": "var(--glow-geo)",
       },
       borderRadius: {
         lg: "var(--radius)",
