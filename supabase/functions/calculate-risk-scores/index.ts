@@ -19,8 +19,9 @@ interface RiskScore {
   };
 }
 
-// Region infrastructure criticality data (based on grid interconnectivity)
+// Region infrastructure criticality data (based on grid interconnectivity and market dependencies)
 const REGION_CRITICALITY: Record<string, number> = {
+  // Electricity Markets
   'ERCOT': 88.3, // Large isolated grid
   'PJM': 85.6, // Largest interconnected grid
   'CAISO': 82.1, // Critical West Coast hub
@@ -29,6 +30,13 @@ const REGION_CRITICALITY: Record<string, number> = {
   'SPP': 76.8,
   'NYISO': 84.2,
   'ISO-NE': 81.5,
+  // Oil & Gas Markets
+  'Henry Hub': 83.5, // Major US natural gas hub
+  'NBP (UK)': 87.2, // Major European gas hub
+  'Tokyo LNG': 89.6, // Critical Asian LNG pricing point
+  'Brent Crude': 91.3, // Global oil benchmark
+  'WTI Crude': 88.7, // US oil benchmark
+  'Dubai Crude': 86.4, // Middle East benchmark
 };
 
 // Calculate CPSI (Cyber-Physical Systems Index)
@@ -227,8 +235,10 @@ serve(async (req) => {
       .order('detected_at', { ascending: false })
       .limit(100);
 
-    // Define regions to calculate scores for
-    const regions = ['ERCOT', 'PJM', 'CAISO', 'Ukraine', 'MISO', 'SPP', 'NYISO', 'ISO-NE'];
+    // Get all unique regions from energy prices data
+    const regions: string[] = energyPrices.length > 0 
+      ? Array.from(new Set(energyPrices.map((p: any) => p.region as string)))
+      : ['ERCOT', 'PJM', 'CAISO', 'Ukraine', 'MISO', 'SPP', 'NYISO', 'ISO-NE'];
     
     const riskScores: RiskScore[] = [];
 
