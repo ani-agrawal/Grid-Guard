@@ -1,4 +1,5 @@
 import { Activity, AlertTriangle, TrendingUp } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const DashboardHeader = () => {
   return (
@@ -34,6 +35,7 @@ export const DashboardHeader = () => {
                 <span className="text-foreground font-medium">3 Active Alerts</span>
               </div>
             </div>
+            <ThemeToggle />
           </div>
         </div>
       </div>

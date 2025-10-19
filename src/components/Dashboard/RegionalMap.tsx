@@ -142,6 +142,39 @@ const LeafletMap = ({ selectedRegion, setSelectedRegion }: {
   selectedRegion: RegionData | null; 
   setSelectedRegion: (region: RegionData | null) => void;
 }) => {
+  const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('dark');
+
+  useEffect(() => {
+    // Check initial theme
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    setCurrentTheme(savedTheme || 'dark');
+
+    // Listen for theme changes
+    const handleThemeChange = () => {
+      const newTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+      setCurrentTheme(newTheme || 'dark');
+    };
+
+    // Listen for storage events (theme changes)
+    window.addEventListener('storage', handleThemeChange);
+    
+    // Also listen for class changes on document
+    const observer = new MutationObserver(() => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setCurrentTheme(isDark ? 'dark' : 'light');
+    });
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => {
+      window.removeEventListener('storage', handleThemeChange);
+      observer.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     // Only run on client side
     if (typeof window === 'undefined') return;
@@ -161,10 +194,19 @@ const LeafletMap = ({ selectedRegion, setSelectedRegion }: {
       // Create map
       const map = L.map('map-container').setView([35.0, -20.0], 3);
 
-      // Add tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      }).addTo(map);
+      // Add tile layer based on theme
+      const tileLayer = currentTheme === 'dark'
+        ? L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+          })
+        : L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+          });
+      
+      tileLayer.addTo(map);
 
       // Add markers
       regions.forEach((region) => {
@@ -200,7 +242,7 @@ const LeafletMap = ({ selectedRegion, setSelectedRegion }: {
         map.remove();
       };
     });
-  }, [setSelectedRegion]);
+  }, [setSelectedRegion, currentTheme]);
 
   return <div id="map-container" style={{ width: '100%', height: '100%' }} />;
 };
