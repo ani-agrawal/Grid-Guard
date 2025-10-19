@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown } from "lucide-react";
@@ -143,22 +143,14 @@ const LeafletMap = ({ selectedRegion, setSelectedRegion }: {
   setSelectedRegion: (region: RegionData | null) => void;
 }) => {
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('dark');
+  const mapRef = useRef<any>(null);
+  const tileLayerRef = useRef<any>(null);
 
+  // Monitor theme changes
   useEffect(() => {
-    // Check initial theme
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     setCurrentTheme(savedTheme || 'dark');
 
-    // Listen for theme changes
-    const handleThemeChange = () => {
-      const newTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-      setCurrentTheme(newTheme || 'dark');
-    };
-
-    // Listen for storage events (theme changes)
-    window.addEventListener('storage', handleThemeChange);
-    
-    // Also listen for class changes on document
     const observer = new MutationObserver(() => {
       const isDark = document.documentElement.classList.contains('dark');
       setCurrentTheme(isDark ? 'dark' : 'light');
@@ -170,43 +162,35 @@ const LeafletMap = ({ selectedRegion, setSelectedRegion }: {
     });
 
     return () => {
-      window.removeEventListener('storage', handleThemeChange);
       observer.disconnect();
     };
   }, []);
 
+  // Initialize map once
   useEffect(() => {
-    // Only run on client side
     if (typeof window === 'undefined') return;
+    if (mapRef.current) return; // Don't reinitialize
 
-    // Dynamically import leaflet and its CSS
     Promise.all([
       import('leaflet'),
       import('leaflet/dist/leaflet.css')
     ]).then(([L]) => {
-      // Remove existing map if any
       const container = document.getElementById('map-container');
       if (!container) return;
       
-      // Clear previous map
       container.innerHTML = '';
 
       // Create map
       const map = L.map('map-container').setView([35.0, -20.0], 3);
+      mapRef.current = map;
 
-      // Add tile layer based on theme
-      const tileLayer = currentTheme === 'dark'
-        ? L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 20
-          })
-        : L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-            maxZoom: 19
-          });
-      
-      tileLayer.addTo(map);
+      // Add initial tile layer
+      const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20
+      }).addTo(map);
+      tileLayerRef.current = tileLayer;
 
       // Add markers
       regions.forEach((region) => {
@@ -237,12 +221,42 @@ const LeafletMap = ({ selectedRegion, setSelectedRegion }: {
           setSelectedRegion(region);
         });
       });
-
-      return () => {
-        map.remove();
-      };
     });
-  }, [setSelectedRegion, currentTheme]);
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [setSelectedRegion]);
+
+  // Update tile layer when theme changes
+  useEffect(() => {
+    if (!mapRef.current || !tileLayerRef.current) return;
+
+    import('leaflet').then((L) => {
+      // Remove old tile layer
+      if (tileLayerRef.current) {
+        tileLayerRef.current.remove();
+      }
+
+      // Add new tile layer based on theme
+      const newTileLayer = currentTheme === 'dark'
+        ? L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+          })
+        : L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+          });
+      
+      newTileLayer.addTo(mapRef.current);
+      tileLayerRef.current = newTileLayer;
+    });
+  }, [currentTheme]);
 
   return <div id="map-container" style={{ width: '100%', height: '100%' }} />;
 };
