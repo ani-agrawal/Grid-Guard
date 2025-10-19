@@ -90,6 +90,8 @@ const Index = () => {
 
           {/* Markets Overview Tab */}
           <TabsContent value="markets" className="space-y-8">
+            <RegionalMap />
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               <MetricCard
                 title="Electricity (PJM)"
@@ -152,8 +154,6 @@ const Index = () => {
                 lastUpdated={1}
               />
             </div>
-
-            <RegionalMap />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <MetricCard
