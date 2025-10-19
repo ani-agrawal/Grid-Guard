@@ -9,6 +9,8 @@ interface Alert {
   title: string;
   description: string;
   time: string;
+  incidentId?: string;
+  relatedMarkets?: string[];
 }
 
 const alerts: Alert[] = [
@@ -18,6 +20,8 @@ const alerts: Alert[] = [
     title: "Ransomware Activity Detected",
     description: "Elevated OT targeting in Gulf Coast utilities sector",
     time: "2m ago",
+    incidentId: "INC-001",
+    relatedMarkets: ["ERCOT", "Henry Hub"],
   },
   {
     id: 2,
@@ -25,6 +29,8 @@ const alerts: Alert[] = [
     title: "Iran-Israel Proxy Escalation",
     description: "Maritime port systems showing increased reconnaissance",
     time: "15m ago",
+    incidentId: "INC-002",
+    relatedMarkets: ["Brent Crude"],
   },
   {
     id: 3,
@@ -32,6 +38,7 @@ const alerts: Alert[] = [
     title: "ERCOT Price Normalization",
     description: "Grid stability restored, volatility decreasing",
     time: "1h ago",
+    relatedMarkets: ["ERCOT"],
   },
 ];
 
@@ -77,7 +84,9 @@ export const AlertFeed = () => {
         type: kev.severity === 'critical' ? 'critical' : 'warning',
         title: `${kev.vendor} Vulnerability Detected`,
         description: kev.title.substring(0, 60) + '...',
-        time: timeDisplay
+        time: timeDisplay,
+        incidentId: `CVE-${idx + 1}`,
+        relatedMarkets: ["PJM", "CAISO"],
       });
     });
   }
@@ -89,7 +98,9 @@ export const AlertFeed = () => {
       type: malware.severity === 'critical' ? 'critical' : 'warning',
       title: `${malware.name} Activity Detected`,
       description: `Targeting ${malware.targetSector} infrastructure`,
-      time: malware.lastSeen
+      time: malware.lastSeen,
+      incidentId: `MAL-${liveAlerts.length + 1}`,
+      relatedMarkets: ["ERCOT", "Henry Hub"],
     });
   }
 
@@ -139,9 +150,18 @@ export const AlertFeed = () => {
                     {alert.time}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground mb-2">
                   {alert.description}
                 </p>
+                {alert.relatedMarkets && alert.relatedMarkets.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {alert.relatedMarkets.map((market, idx) => (
+                      <span key={idx} className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">
+                        {market}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           );

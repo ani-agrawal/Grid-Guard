@@ -13,12 +13,16 @@ import { useEnergyPrices } from "@/hooks/useEnergyPrices";
 import { useCVEData } from "@/hooks/useCVEData";
 import { useRiskScores } from "@/hooks/useRiskScores";
 import { useCurrencyConversion } from "@/hooks/useCurrencyConversion";
+import { useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 const Index = () => {
   const { data: energyData } = useEnergyPrices();
   const { data: cveData } = useCVEData();
   const { data: riskScores } = useRiskScores();
   const { convertPrice } = useCurrencyConversion();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "markets");
 
   // Calculate real metrics from API data
   const getMarketData = (region: string) => {
@@ -47,12 +51,24 @@ const Index = () => {
   // Count active regions
   const activeRegions = energyData?.energyPrices?.length || 24;
 
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && ["markets", "risk", "forecasts", "alerts"].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSearchParams({ tab: value });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardHeader />
       
       <main className="container mx-auto px-6 py-8">
-        <Tabs defaultValue="markets" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="markets" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
@@ -84,6 +100,8 @@ const Index = () => {
                 gradient="primary"
                 subtitle="per MWh"
                 marketId="pjm"
+                source="PJM"
+                lastUpdated={1}
               />
               <MetricCard
                 title="Brent Crude"
@@ -94,6 +112,8 @@ const Index = () => {
                 gradient="primary"
                 subtitle="per barrel"
                 marketId="brent"
+                source="EIA"
+                lastUpdated={2}
               />
               <MetricCard
                 title="Natural Gas (Henry Hub)"
@@ -104,6 +124,8 @@ const Index = () => {
                 gradient="primary"
                 subtitle="per MMBtu"
                 marketId="natgas"
+                source="EIA"
+                lastUpdated={1}
               />
               <MetricCard
                 title="Electricity (CAISO)"
@@ -114,6 +136,8 @@ const Index = () => {
                 gradient="primary"
                 subtitle="per MWh"
                 marketId="caiso"
+                source="CAISO"
+                lastUpdated={1}
               />
               <MetricCard
                 title="Electricity (ERCOT)"
@@ -124,6 +148,8 @@ const Index = () => {
                 gradient="primary"
                 subtitle="per MWh"
                 marketId="ercot"
+                source="ERCOT"
+                lastUpdated={1}
               />
             </div>
 

@@ -12,6 +12,8 @@ interface MetricCardProps {
   gradient?: "primary" | "cyber" | "geo";
   subtitle?: string;
   marketId?: string;
+  source?: string;
+  lastUpdated?: number; // minutes ago
 }
 
 export const MetricCard = ({
@@ -23,6 +25,8 @@ export const MetricCard = ({
   gradient = "primary",
   subtitle,
   marketId,
+  source,
+  lastUpdated = 1,
 }: MetricCardProps) => {
   const navigate = useNavigate();
 
@@ -30,6 +34,12 @@ export const MetricCard = ({
     if (marketId) {
       navigate(`/market/${marketId}`);
     }
+  };
+
+  const getLagColor = () => {
+    if (lastUpdated < 2) return "bg-success";
+    if (lastUpdated <= 10) return "bg-warning";
+    return "bg-destructive";
   };
 
   return (
@@ -42,7 +52,17 @@ export const MetricCard = ({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm text-muted-foreground mb-2">{title}</p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-muted-foreground">{title}</p>
+            {source && (
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded">
+                  {source}
+                </span>
+                <div className={cn("h-1.5 w-1.5 rounded-full", getLagColor())} title={`Updated ${lastUpdated}m ago`} />
+              </div>
+            )}
+          </div>
           <p className="text-3xl font-bold text-foreground mb-1">{value}</p>
           {subtitle && (
             <p className="text-xs text-muted-foreground">{subtitle}</p>

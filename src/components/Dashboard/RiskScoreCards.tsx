@@ -55,8 +55,14 @@ export const RiskScoreCards = () => {
                 {score.explanation.trend}
               </Badge>
             </CardTitle>
-            <CardDescription>
-              Impact Probability: {(score.impact_probability * 100).toFixed(0)}%
+            <CardDescription className="space-y-1">
+              <div>Impact Probability: {(score.impact_probability * 100).toFixed(0)}%</div>
+              <div className="text-xs">
+                <span className="text-muted-foreground">Confidence bands:</span>{" "}
+                <span className="font-mono">68%: ±{(score.impact_probability * 15).toFixed(0)}pts</span>{" "}
+                <span className="text-muted-foreground">|</span>{" "}
+                <span className="font-mono">90%: ±{(score.impact_probability * 25).toFixed(0)}pts</span>
+              </div>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
