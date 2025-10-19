@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LineChart,
@@ -12,6 +13,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { useEnergyPrices } from "@/hooks/useEnergyPrices";
+import { useParams } from "react-router-dom";
 
 interface ForecastData {
   time: string;
@@ -24,27 +27,67 @@ interface ForecastData {
   bearCase: number;
 }
 
-const nowcastData: ForecastData[] = [
-  { time: "Now", actual: 46.8, forecast: 46.8, confidenceHigh: 47.2, confidenceLow: 46.4, baseCase: 46.8, bullCase: 47.5, bearCase: 46.2 },
-  { time: "+6h", forecast: 47.2, confidenceHigh: 48.1, confidenceLow: 46.3, baseCase: 47.2, bullCase: 48.5, bearCase: 46.0 },
-  { time: "+12h", forecast: 47.8, confidenceHigh: 49.2, confidenceLow: 46.4, baseCase: 47.8, bullCase: 49.8, bearCase: 45.8 },
-  { time: "+18h", forecast: 48.3, confidenceHigh: 50.0, confidenceLow: 46.6, baseCase: 48.3, bullCase: 51.2, bearCase: 45.5 },
-  { time: "+24h", forecast: 48.9, confidenceHigh: 51.2, confidenceLow: 46.6, baseCase: 48.9, bullCase: 52.5, bearCase: 45.3 },
-  { time: "+48h", forecast: 49.3, confidenceHigh: 52.8, confidenceLow: 45.8, baseCase: 49.3, bullCase: 54.2, bearCase: 44.5 },
-  { time: "+72h", forecast: 49.8, confidenceHigh: 54.5, confidenceLow: 45.1, baseCase: 49.8, bullCase: 56.0, bearCase: 43.6 },
-];
-
-const forecastData: ForecastData[] = [
-  { time: "Day 0", actual: 46.8, forecast: 46.8, confidenceHigh: 47.2, confidenceLow: 46.4, baseCase: 46.8, bullCase: 47.5, bearCase: 46.2 },
-  { time: "Day 1", forecast: 48.9, confidenceHigh: 51.2, confidenceLow: 46.6, baseCase: 48.9, bullCase: 52.5, bearCase: 45.3 },
-  { time: "Day 2", forecast: 50.2, confidenceHigh: 54.8, confidenceLow: 45.6, baseCase: 50.2, bullCase: 56.8, bearCase: 43.6 },
-  { time: "Day 3", forecast: 51.5, confidenceHigh: 58.2, confidenceLow: 44.8, baseCase: 51.5, bullCase: 61.5, bearCase: 41.5 },
-  { time: "Day 4", forecast: 52.3, confidenceHigh: 61.0, confidenceLow: 43.6, baseCase: 52.3, bullCase: 65.2, bearCase: 39.4 },
-  { time: "Day 5", forecast: 52.8, confidenceHigh: 63.5, confidenceLow: 42.1, baseCase: 52.8, bullCase: 68.5, bearCase: 37.1 },
-  { time: "Day 7", forecast: 53.2, confidenceHigh: 66.8, confidenceLow: 39.6, baseCase: 53.2, bullCase: 72.5, bearCase: 33.9 },
-];
-
 export const ForecastChart = () => {
+  const { id } = useParams();
+  const { data, isLoading } = useEnergyPrices();
+
+  const generateForecastData = (basePrice: number, periods: number, hourlyIncrement: boolean = false): ForecastData[] => {
+    const data: ForecastData[] = [];
+    const volatility = basePrice * 0.02; // 2% volatility
+    
+    for (let i = 0; i <= periods; i++) {
+      const trend = i * 0.3; // gradual upward trend
+      const randomFactor = (Math.random() - 0.5) * 2;
+      const forecast = basePrice + trend + (randomFactor * volatility);
+      
+      const confidenceSpread = volatility * (1 + i * 0.2);
+      const scenarioSpread = volatility * (1.5 + i * 0.3);
+      
+      data.push({
+        time: hourlyIncrement ? `+${i * 6}h` : `Day ${i}`,
+        actual: i === 0 ? basePrice : undefined,
+        forecast: parseFloat(forecast.toFixed(2)),
+        confidenceHigh: parseFloat((forecast + confidenceSpread).toFixed(2)),
+        confidenceLow: parseFloat((forecast - confidenceSpread).toFixed(2)),
+        baseCase: parseFloat(forecast.toFixed(2)),
+        bullCase: parseFloat((forecast + scenarioSpread).toFixed(2)),
+        bearCase: parseFloat((forecast - scenarioSpread).toFixed(2)),
+      });
+    }
+    
+    return data;
+  };
+
+  const getBasePrice = () => {
+    if (!data?.energyPrices) return 45;
+    
+    // Try to find specific region if id is provided
+    if (id) {
+      const regionPrice = data.energyPrices.find(p => 
+        p.region.toLowerCase().includes(id.toLowerCase()) ||
+        p.marketType.toLowerCase().includes(id.toLowerCase())
+      );
+      if (regionPrice) return regionPrice.price;
+    }
+    
+    // Default to first available price
+    return data.energyPrices[0]?.price || 45;
+  };
+
+  const basePrice = getBasePrice();
+  const nowcastData = generateForecastData(basePrice, 6, true);
+  const forecastData = generateForecastData(basePrice, 7, false);
+
+  if (isLoading) {
+    return (
+      <Card className="p-6 bg-gradient-card border-border">
+        <h3 className="text-lg font-semibold text-foreground mb-4">
+          Price Forecasts with Confidence Bands
+        </h3>
+        <Skeleton className="w-full h-[400px]" />
+      </Card>
+    );
+  }
   return (
     <Card className="p-6 bg-gradient-card border-border">
       <h3 className="text-lg font-semibold text-foreground mb-4">
