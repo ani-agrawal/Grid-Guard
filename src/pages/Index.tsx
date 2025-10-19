@@ -20,7 +20,7 @@ import { useEffect, useState } from "react";
 const Index = () => {
   const { data: energyData } = useEnergyPrices();
   const { data: cveData } = useCVEData();
-  const { data: riskScores } = useRiskScores();
+  const { data: riskScores, isCalculating, calculateRiskScores: triggerCalculation } = useRiskScores();
   const { convertPrice } = useCurrencyConversion();
   const { accuracy: forecastAccuracy } = useForecastAccuracy();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -173,14 +173,32 @@ const Index = () => {
           <TabsContent value="risk" className="space-y-8">
             {/* Proprietary Risk Scores */}
             <div className="space-y-4">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">
-                  Proprietary Risk Scores
-                </h2>
-                <p className="text-muted-foreground">
-                  Advanced analytics combining cyber threats, geopolitical events, and infrastructure criticality
-                </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground mb-2">
+                    Proprietary Risk Scores
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Advanced analytics combining cyber threats, geopolitical events, and infrastructure criticality
+                  </p>
+                </div>
+                <button
+                  onClick={() => triggerCalculation()}
+                  disabled={isCalculating}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Activity className={`h-4 w-4 ${isCalculating ? 'animate-spin' : ''}`} />
+                  {isCalculating ? 'Calculating...' : 'Refresh Scores'}
+                </button>
               </div>
+              {isCalculating && (
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 text-sm text-primary">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-4 w-4 animate-spin" />
+                    <span>Calculating risk scores using real-time data from CVE feeds, energy markets, and threat intelligence...</span>
+                  </div>
+                </div>
+              )}
               <RiskScoreCards />
             </div>
 
