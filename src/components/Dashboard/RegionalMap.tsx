@@ -148,6 +148,7 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: {
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('dark');
   const mapRef = useRef<any>(null);
   const tileLayerRef = useRef<any>(null);
+  const markersRef = useRef<Map<string, any>>(new Map());
 
   // Monitor theme changes
   useEffect(() => {
@@ -168,6 +169,25 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: {
       observer.disconnect();
     };
   }, []);
+
+  // Fly to selected region when it changes
+  useEffect(() => {
+    if (!mapRef.current || !selectedRegion) return;
+
+    const marker = markersRef.current.get(selectedRegion.id);
+    if (marker) {
+      // Fly to the region with animation
+      mapRef.current.flyTo(selectedRegion.position, 6, {
+        duration: 1.5,
+        easeLinearity: 0.25
+      });
+      
+      // Open the popup after a short delay to let the animation start
+      setTimeout(() => {
+        marker.openPopup();
+      }, 300);
+    }
+  }, [selectedRegion]);
 
   // Initialize map once
   useEffect(() => {
@@ -220,6 +240,9 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: {
             </div>
           `);
 
+        // Store marker reference
+        markersRef.current.set(region.id, marker);
+
         marker.on('click', () => {
           setSelectedRegion(region);
         });
@@ -231,6 +254,7 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: {
         mapRef.current.remove();
         mapRef.current = null;
       }
+      markersRef.current.clear();
     };
   }, [setSelectedRegion]);
 
