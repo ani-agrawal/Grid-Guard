@@ -39,10 +39,7 @@ const Index = () => {
   const caiso = getMarketData("caiso");
   const ercot = getMarketData("ercot");
   
-  // Calculate threat scores from real data
-  const cyberScore = cveData?.cisaKev ? 
-    Math.min(100, (cveData.cisaKev.filter(c => c.severity === "critical").length * 5)) : 72;
-  
+  // Calculate geopolitical score from real data
   const geoScore = riskScores ? 
     Math.round(riskScores.reduce((sum, s) => sum + s.gei, 0) / riskScores.length) : 68;
 
@@ -191,18 +188,17 @@ const Index = () => {
             <ThreatAssetLinker />
 
             {/* Real-time Threat Gauges */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ThreatGauge
-                title="Cyber Threat Index"
-                level={cyberScore >= 80 ? "critical" : cyberScore >= 60 ? "elevated" : "moderate"}
-                score={cyberScore}
-                description={
-                  cveData?.cisaKev 
-                    ? `${cveData.cisaKev.filter(c => c.severity === "critical").length} critical CVEs detected. OT/ICS targeting elevated in energy sector.`
-                    : "Monitoring cyber threats across energy infrastructure."
-                }
-                type="cyber"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {riskScores && riskScores.map((regionRisk) => (
+                <ThreatGauge
+                  key={regionRisk.id}
+                  title={`Cyber Threat Index - ${regionRisk.region}`}
+                  level={regionRisk.cpsi >= 80 ? "critical" : regionRisk.cpsi >= 60 ? "elevated" : "moderate"}
+                  score={Math.round(regionRisk.cpsi)}
+                  description={`CPSI: ${regionRisk.cpsi.toFixed(1)} | ECS: ${regionRisk.ecs.toFixed(1)} | Impact Probability: ${(regionRisk.impact_probability * 100).toFixed(0)}%`}
+                  type="cyber"
+                />
+              ))}
               <ThreatGauge
                 title="Geopolitical Risk Index"
                 level={geoScore >= 80 ? "critical" : geoScore >= 60 ? "high" : "moderate"}
