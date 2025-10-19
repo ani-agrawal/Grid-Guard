@@ -3,6 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEnergyPrices } from "@/hooks/useEnergyPrices";
+import { useCurrencyConversion } from "@/hooks/useCurrencyConversion";
 
 interface ForecastData {
   region: string;
@@ -15,6 +16,7 @@ interface ForecastData {
 
 export const PriceForecast = () => {
   const { data, isLoading } = useEnergyPrices();
+  const { convertPrice } = useCurrencyConversion();
 
   const generateForecasts = (): ForecastData[] => {
     if (!data?.energyPrices) return [];
@@ -25,8 +27,8 @@ export const PriceForecast = () => {
       
       return {
         region: `${price.region} (${price.marketType})`,
-        currentPrice: `$${price.price.toFixed(2)}${price.marketType === "Electricity" ? "/MWh" : "/MMBtu"}`,
-        forecast: `$${forecastPrice.toFixed(2)}${price.marketType === "Electricity" ? "/MWh" : "/MMBtu"}`,
+        currentPrice: `${convertPrice(price.price)}${price.marketType === "Electricity" ? "/MWh" : "/MMBtu"}`,
+        forecast: `${convertPrice(forecastPrice)}${price.marketType === "Electricity" ? "/MWh" : "/MMBtu"}`,
         change: forecastChange,
         cyberRisk: price.threatLevel === "High" ? "Elevated" : price.threatLevel === "Medium" ? "Moderate" : "Low",
         geoRisk: price.forecast === "Bullish" ? "Elevated" : price.forecast === "Bearish" ? "Moderate" : "Stable",

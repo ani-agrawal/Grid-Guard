@@ -12,11 +12,13 @@ import { Zap, DollarSign, Fuel, Shield, Globe, Wind, Sun, TrendingUp, AlertTrian
 import { useEnergyPrices } from "@/hooks/useEnergyPrices";
 import { useCVEData } from "@/hooks/useCVEData";
 import { useRiskScores } from "@/hooks/useRiskScores";
+import { useCurrencyConversion } from "@/hooks/useCurrencyConversion";
 
 const Index = () => {
   const { data: energyData } = useEnergyPrices();
   const { data: cveData } = useCVEData();
   const { data: riskScores } = useRiskScores();
+  const { convertPrice } = useCurrencyConversion();
 
   // Calculate real metrics from API data
   const getMarketData = (region: string) => {
@@ -75,7 +77,7 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               <MetricCard
                 title="Electricity (PJM)"
-                value={pjmData ? `$${pjmData.price.toFixed(2)}` : "$46.80"}
+                value={pjmData ? convertPrice(pjmData.price) : convertPrice(46.80)}
                 change={pjmData ? `${Math.abs(pjmData.change).toFixed(1)}%` : "2.4%"}
                 changeType={pjmData && pjmData.change >= 0 ? "up" : "down"}
                 icon={Zap}
@@ -85,7 +87,7 @@ const Index = () => {
               />
               <MetricCard
                 title="Brent Crude"
-                value="$87.10"
+                value={convertPrice(87.10)}
                 change="3.2%"
                 changeType="up"
                 icon={DollarSign}
@@ -95,7 +97,7 @@ const Index = () => {
               />
               <MetricCard
                 title="Natural Gas (Henry Hub)"
-                value={henryHubData ? `$${henryHubData.price.toFixed(2)}` : "$3.45"}
+                value={henryHubData ? convertPrice(henryHubData.price) : convertPrice(3.45)}
                 change={henryHubData ? `${Math.abs(henryHubData.change).toFixed(1)}%` : "1.8%"}
                 changeType={henryHubData && henryHubData.change >= 0 ? "up" : "down"}
                 icon={Fuel}
@@ -105,7 +107,7 @@ const Index = () => {
               />
               <MetricCard
                 title="Electricity (CAISO)"
-                value={caiso ? `$${caiso.price.toFixed(2)}` : "$28.50"}
+                value={caiso ? convertPrice(caiso.price) : convertPrice(28.50)}
                 change={caiso ? `${Math.abs(caiso.change).toFixed(1)}%` : "1.2%"}
                 changeType={caiso && caiso.change >= 0 ? "up" : "down"}
                 icon={Wind}
@@ -115,7 +117,7 @@ const Index = () => {
               />
               <MetricCard
                 title="Electricity (ERCOT)"
-                value={ercot ? `$${ercot.price.toFixed(2)}` : "$32.90"}
+                value={ercot ? convertPrice(ercot.price) : convertPrice(32.90)}
                 change={ercot ? `${Math.abs(ercot.change).toFixed(1)}%` : "0.8%"}
                 changeType={ercot && ercot.change >= 0 ? "up" : "down"}
                 icon={Sun}

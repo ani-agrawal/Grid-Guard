@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { useEnergyPrices } from "@/hooks/useEnergyPrices";
+import { useCurrencyConversion } from "@/hooks/useCurrencyConversion";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface RegionData {
@@ -292,6 +293,7 @@ export const RegionalMap = () => {
   const [selectedRegion, setSelectedRegion] = useState<RegionData | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const { data: energyData, isLoading } = useEnergyPrices();
+  const { convertPrice } = useCurrencyConversion();
   
   // Merge real API data with static regions
   const enrichedRegions = regions.map(region => {
@@ -304,7 +306,7 @@ export const RegionalMap = () => {
     if (liveData) {
       return {
         ...region,
-        price: `$${liveData.price}/${region.market.includes('Electricity') ? 'MWh' : region.market.includes('Gas') ? 'MMBtu' : 'bbl'}`,
+        price: `${convertPrice(liveData.price)}/${region.market.includes('Electricity') ? 'MWh' : region.market.includes('Gas') ? 'MMBtu' : 'bbl'}`,
         change: liveData.change,
         threatLevel: liveData.threatLevel.toLowerCase() as "low" | "medium" | "high",
         forecast: liveData.forecast
