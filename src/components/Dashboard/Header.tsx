@@ -39,10 +39,13 @@ export const DashboardHeader = () => {
                 <TrendingUp className="h-4 w-4 text-success" />
                 <span className="text-foreground font-medium">{accuracy}% Accuracy</span>
               </div>
-              <div className="flex items-center gap-2">
+              <button 
+                onClick={() => navigate("/?tab=alerts")}
+                className="flex items-center gap-2 hover:opacity-70 transition-opacity cursor-pointer"
+              >
                 <AlertTriangle className="h-4 w-4 text-warning" />
                 <span className="text-foreground font-medium">3 Active Alerts</span>
-              </div>
+              </button>
             </div>
             <CurrencySelector />
             <ThemeToggle />
