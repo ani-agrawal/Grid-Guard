@@ -1,8 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, FileText, Bug, History } from "lucide-react";
+import { ExternalLink, FileText, Bug, History, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCVEData } from "@/hooks/useCVEData";
 
 interface KEVItem {
   id: string;
@@ -165,11 +166,42 @@ const historicalAnalogs: HistoricalAnalog[] = [
 ];
 
 export const EvidencePanel = () => {
+  const { data: cveData, isLoading, error } = useCVEData();
+
+  // Use real data if available, otherwise fall back to mock data
+  const kevItemsData = cveData?.cisaKev || kevItems;
+  const advisoriesData = cveData?.vendorAdvisories || advisories;
+  const malwareNotesData = cveData?.malwareFamilies?.map((mf: any) => ({
+    id: mf.name,
+    family: mf.name,
+    variant: mf.variant,
+    targetSector: mf.targetSector,
+    capabilities: mf.ttps || [],
+    lastSeen: mf.lastSeen,
+    attribution: 'Various APT Groups'
+  })) || malwareNotes;
+
   return (
     <Card className="p-6 bg-gradient-card border-border">
-      <h3 className="text-lg font-semibold text-foreground mb-4">
-        Evidence & Intelligence Sources
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-foreground">
+          Evidence & Intelligence Sources
+        </h3>
+        {isLoading && (
+          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+        )}
+        {cveData?.lastUpdated && (
+          <span className="text-xs text-muted-foreground">
+            Updated: {new Date(cveData.lastUpdated).toLocaleTimeString()}
+          </span>
+        )}
+      </div>
+      
+      {error && (
+        <div className="mb-4 p-3 bg-warning/10 border border-warning/20 rounded-lg text-sm text-warning">
+          Using cached data. Live feed temporarily unavailable.
+        </div>
+      )}
       
       <Tabs defaultValue="kev" className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-4">
@@ -181,9 +213,9 @@ export const EvidencePanel = () => {
         
         <TabsContent value="kev" className="mt-0 space-y-3">
           <p className="text-sm text-muted-foreground mb-3">
-            Known Exploited Vulnerabilities affecting energy sector OT/ICS systems
+            Known Exploited Vulnerabilities affecting energy sector OT/ICS systems from Exploit-DB
           </p>
-          {kevItems.map((item) => (
+          {kevItemsData.map((item: any) => (
             <div
               key={item.id}
               className="p-4 rounded-lg bg-secondary/50 border border-border"
@@ -192,23 +224,35 @@ export const EvidencePanel = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Badge variant="destructive" className="text-xs">
-                      {item.cveId}
+                      {item.id || item.cveId}
                     </Badge>
-                    {item.exploited && (
-                      <Badge variant="outline" className="text-xs border-warning text-warning">
-                        ACTIVE EXPLOIT
+                    <Badge 
+                      variant="outline" 
+                      className={cn(
+                        "text-xs",
+                        item.severity === "critical" && "border-destructive text-destructive",
+                        item.severity === "high" && "border-warning text-warning"
+                      )}
+                    >
+                      {item.severity}
+                    </Badge>
+                    {item.verified && (
+                      <Badge variant="outline" className="text-xs border-success text-success">
+                        VERIFIED
                       </Badge>
                     )}
                   </div>
                   <h4 className="font-semibold text-foreground">
-                    {item.vendor} - {item.product}
+                    {item.vendor}
                   </h4>
                 </div>
               </div>
-              <p className="text-sm text-foreground mb-2">{item.vulnerability}</p>
+              <p className="text-sm text-foreground mb-2">{item.title || item.vulnerability}</p>
               <div className="flex gap-4 text-xs text-muted-foreground">
                 <span>Added: {item.dateAdded}</span>
-                <span>Remediation Due: {item.dueDate}</span>
+                {item.affectedAssets && (
+                  <span>Affects: {item.affectedAssets.join(', ')}</span>
+                )}
               </div>
             </div>
           ))}
@@ -218,7 +262,7 @@ export const EvidencePanel = () => {
           <p className="text-sm text-muted-foreground mb-3">
             Vendor security advisories from Schneider, Siemens, GE, Rockwell, ABB
           </p>
-          {advisories.map((advisory) => (
+          {advisoriesData.map((advisory: any) => (
             <div
               key={advisory.id}
               className="p-4 rounded-lg bg-secondary/50 border border-border hover:border-primary/50 transition-colors"
@@ -245,9 +289,14 @@ export const EvidencePanel = () => {
                     {advisory.title}
                   </h4>
                   <div className="flex flex-wrap gap-1 mb-2">
-                    {advisory.affectedProducts.map((product, i) => (
+                    {advisory.affectedProducts?.map((product: string, i: number) => (
                       <Badge key={i} variant="secondary" className="text-xs">
                         {product}
+                      </Badge>
+                    ))}
+                    {advisory.cveIds?.map((cve: string, i: number) => (
+                      <Badge key={`cve-${i}`} variant="outline" className="text-xs">
+                        {cve}
                       </Badge>
                     ))}
                   </div>
@@ -270,7 +319,7 @@ export const EvidencePanel = () => {
           <p className="text-sm text-muted-foreground mb-3">
             Active malware families targeting energy infrastructure
           </p>
-          {malwareNotes.map((malware) => (
+          {malwareNotesData.map((malware: any) => (
             <div
               key={malware.id}
               className="p-4 rounded-lg bg-secondary/50 border border-border"

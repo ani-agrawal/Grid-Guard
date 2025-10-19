@@ -1,1 +1,4 @@
 project_id = "tmsulkbypsljthsqxmrk"
+
+[functions.fetch-cve-data]
+verify_jwt = false
