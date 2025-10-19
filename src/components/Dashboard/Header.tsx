@@ -13,7 +13,10 @@ export const DashboardHeader = () => {
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <button 
-            onClick={() => navigate("/")}
+            onClick={() => {
+              navigate("/?tab=markets");
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
             className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
           >
             <div className="h-10 w-10 rounded-lg bg-gradient-primary flex items-center justify-center shadow-glow-primary">
