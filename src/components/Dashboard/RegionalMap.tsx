@@ -175,6 +175,34 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion, convertPrice }
     };
   }, []);
 
+  // Update marker popups when regions data changes (e.g., currency change)
+  useEffect(() => {
+    if (!mapRef.current || markersRef.current.size === 0) return;
+
+    regions.forEach((region) => {
+      const marker = markersRef.current.get(region.id);
+      if (marker) {
+        const color = region.threatLevel === "high" ? "#ef4444" : 
+                     region.threatLevel === "medium" ? "#f59e0b" : "#10b981";
+        
+        const numericPrice = parseFloat(region.price);
+        const formattedPrice = isNaN(numericPrice) ? region.price : `${convertPrice(numericPrice)}/${region.market.includes('Electricity') ? 'MWh' : region.market.includes('Gas') ? 'MMBtu' : 'bbl'}`;
+        
+        // Update popup content
+        marker.setPopupContent(`
+          <div style="padding: 8px; min-width: 200px;">
+            <h3 style="font-weight: bold; margin-bottom: 4px;">${region.name}</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 8px;">${region.market}</p>
+            <p style="font-size: 14px; font-weight: 600;">${formattedPrice}</p>
+            <span style="display: inline-block; margin-top: 8px; padding: 2px 8px; background: ${color}; color: white; border-radius: 4px; font-size: 12px; font-weight: 600;">
+              ${region.threatLevel.toUpperCase()}
+            </span>
+          </div>
+        `);
+      }
+    });
+  }, [regions, convertPrice]);
+
   // Fly to selected region when it changes
   useEffect(() => {
     if (!mapRef.current || !selectedRegion) return;
