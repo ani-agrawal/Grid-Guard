@@ -205,7 +205,7 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: {
       container.innerHTML = '';
 
       // Create map
-      const map = L.map('map-container').setView([35.0, -20.0], 3);
+      const map = L.map('map-container').setView([20.0, 0.0], 2);
       mapRef.current = map;
 
       // Add initial tile layer
