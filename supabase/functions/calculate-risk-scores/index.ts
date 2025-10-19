@@ -93,15 +93,121 @@ function calculateCPSI(
   return { score: Math.min(100, score), factors };
 }
 
-// Calculate GEI (Geopolitical Event Index)
-function calculateGEI(
+// Fetch real-time geopolitical events from GDELT
+async function fetchGDELTEvents(region: string): Promise<{ eventCount: number; severity: 'low' | 'medium' | 'high' | 'critical'; topics: string[] }> {
+  try {
+    // Map regions to countries/areas for GDELT query
+    const regionMapping: Record<string, string[]> = {
+      'ERCOT': ['United States', 'Texas'],
+      'PJM': ['United States', 'Pennsylvania', 'New Jersey'],
+      'CAISO': ['United States', 'California'],
+      'MISO': ['United States', 'Midwest'],
+      'SPP': ['United States', 'Southwest'],
+      'NYISO': ['United States', 'New York'],
+      'ISO-NE': ['United States', 'New England'],
+      'Ukraine': ['Ukraine', 'Russia'],
+      'Henry Hub': ['United States', 'Louisiana'],
+      'NBP (UK)': ['United Kingdom', 'Europe'],
+      'Tokyo LNG': ['Japan', 'Asia'],
+      'Brent Crude': ['United Kingdom', 'North Sea', 'Europe'],
+      'WTI Crude': ['United States', 'Oklahoma'],
+      'Dubai Crude': ['United Arab Emirates', 'Middle East'],
+    };
+
+    const countries = regionMapping[region] || ['United States'];
+    const query = `energy OR oil OR gas OR pipeline OR power OR grid OR ${countries.join(' OR ')}`;
+    
+    // GDELT Event Database - last 24 hours
+    const timeAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const dateStr = timeAgo.toISOString().split('T')[0].replace(/-/g, '');
+    
+    // Use GDELT GKG (Global Knowledge Graph) API for conflict/threat monitoring
+    const gdeltUrl = `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(query)}&mode=artlist&maxrecords=50&format=json&startdatetime=${dateStr}000000`;
+    
+    const response = await fetch(gdeltUrl, {
+      headers: { 'User-Agent': 'GridGuard-Risk-Monitor/1.0' }
+    });
+
+    if (!response.ok) {
+      console.warn('GDELT API returned non-OK status:', response.status);
+      return { eventCount: 0, severity: 'low', topics: [] };
+    }
+
+    const data = await response.json();
+    const articles = data.articles || [];
+
+    // Analyze article themes and tones
+    let conflictScore = 0;
+    const topics = new Set<string>();
+
+    articles.forEach((article: any) => {
+      const title = (article.title || '').toLowerCase();
+      const url = (article.url || '').toLowerCase();
+      
+      // High-risk keywords
+      if (title.match(/attack|war|conflict|sanction|crisis|strike|explosion|sabotage/)) {
+        conflictScore += 15;
+        topics.add('Armed conflict or sabotage');
+      }
+      if (title.match(/tension|dispute|threat|warning|escalat/)) {
+        conflictScore += 8;
+        topics.add('Rising tensions');
+      }
+      if (title.match(/embargo|blockade|restrict|ban/)) {
+        conflictScore += 12;
+        topics.add('Trade restrictions');
+      }
+      if (title.match(/cyber|hack|breach/)) {
+        conflictScore += 10;
+        topics.add('Cyber threats');
+      }
+      if (title.match(/protest|riot|unrest/)) {
+        conflictScore += 6;
+        topics.add('Civil unrest');
+      }
+    });
+
+    // Determine severity based on score
+    let severity: 'low' | 'medium' | 'high' | 'critical' = 'low';
+    if (conflictScore > 150) severity = 'critical';
+    else if (conflictScore > 80) severity = 'high';
+    else if (conflictScore > 30) severity = 'medium';
+
+    return {
+      eventCount: articles.length,
+      severity,
+      topics: Array.from(topics).slice(0, 3)
+    };
+  } catch (error) {
+    console.error('Error fetching GDELT data:', error);
+    return { eventCount: 0, severity: 'low', topics: [] };
+  }
+}
+
+// Calculate GEI (Geopolitical Event Index) with real-time data
+async function calculateGEI(
   threatEvents: any[],
   region: string
-): { score: number; factors: string[] } {
+): Promise<{ score: number; factors: string[] }> {
   let score = 0;
   const factors: string[] = [];
 
-  // Regional geopolitical events (0-60 points)
+  // Fetch real-time geopolitical events from GDELT
+  const gdeltData = await fetchGDELTEvents(region);
+  
+  // Real-time event severity scoring (0-50 points)
+  const severityScores = { low: 5, medium: 15, high: 35, critical: 50 };
+  const rtScore = severityScores[gdeltData.severity];
+  score += rtScore;
+
+  if (gdeltData.eventCount > 0) {
+    factors.push(`${gdeltData.eventCount} recent events monitored in region`);
+    if (gdeltData.topics.length > 0) {
+      factors.push(`Active: ${gdeltData.topics[0]}`);
+    }
+  }
+
+  // Regional geopolitical events from database (0-30 points)
   const geoThreats = threatEvents.filter(t => 
     t.event_type === 'geopolitical' && 
     t.affected_regions?.includes(region)
@@ -109,26 +215,26 @@ function calculateGEI(
 
   const criticalGeo = geoThreats.filter(t => t.severity === 'critical').length;
   const highGeo = geoThreats.filter(t => t.severity === 'high').length;
-  const geoScore = Math.min(60, (criticalGeo * 15) + (highGeo * 8));
-  score += geoScore;
+  const dbScore = Math.min(30, (criticalGeo * 10) + (highGeo * 5));
+  score += dbScore;
 
   if (geoThreats.length > 0) {
-    factors.push(`${geoThreats.length} geopolitical events affecting region`);
+    factors.push(`${geoThreats.length} tracked geopolitical threats`);
   }
 
-  // Conflict zone proximity (0-40 points)
+  // Conflict zone proximity (0-20 points)
   const conflictRegions = ['Ukraine', 'Middle East', 'Persian Gulf'];
   if (conflictRegions.includes(region)) {
-    score += 40;
-    factors.push('Active conflict zone');
+    score += 20;
+    factors.push('High-risk conflict zone');
   } else {
     // Check spillover risk
     const spilloverRisk = geoThreats.some(t => 
       t.affected_regions?.some((r: string) => conflictRegions.includes(r))
     );
     if (spilloverRisk) {
-      score += 20;
-      factors.push('Spillover risk from nearby conflict');
+      score += 10;
+      factors.push('Spillover risk proximity');
     }
   }
 
@@ -248,8 +354,8 @@ serve(async (req) => {
       // Calculate CPSI
       const cpsiResult = calculateCPSI(cveData, threatEvents || [], region);
       
-      // Calculate GEI
-      const geiResult = calculateGEI(threatEvents || [], region);
+      // Calculate GEI with real-time data
+      const geiResult = await calculateGEI(threatEvents || [], region);
       
       // Get ECS (infrastructure criticality)
       const ecs = REGION_CRITICALITY[region] || 75.0;
