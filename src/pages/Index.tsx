@@ -22,6 +22,7 @@ const Index = () => {
             icon={Zap}
             gradient="primary"
             subtitle="per MWh"
+            marketId="pjm"
           />
           <MetricCard
             title="Brent Crude"
@@ -31,6 +32,7 @@ const Index = () => {
             icon={DollarSign}
             gradient="primary"
             subtitle="per barrel"
+            marketId="brent"
           />
           <MetricCard
             title="Natural Gas"
@@ -40,6 +42,7 @@ const Index = () => {
             icon={Fuel}
             gradient="primary"
             subtitle="per MMBtu"
+            marketId="natgas"
           />
         </div>
 
