@@ -23,6 +23,7 @@ const Index = () => {
   const { convertPrice } = useCurrencyConversion();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "markets");
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
   // Calculate real metrics from API data
   const getMarketData = (region: string) => {
@@ -68,28 +69,58 @@ const Index = () => {
       <DashboardHeader />
       
       <main className="container mx-auto px-6 py-8">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
-            <TabsTrigger value="markets" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Markets
-            </TabsTrigger>
-            <TabsTrigger value="risk" className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              Risk Analysis
-            </TabsTrigger>
-            <TabsTrigger value="forecasts" className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              Forecasts
-            </TabsTrigger>
-            <TabsTrigger value="alerts" className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Alerts
-            </TabsTrigger>
-          </TabsList>
+        {/* Show only the map when no region is selected */}
+        {!selectedRegion ? (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <p className="text-muted-foreground text-lg">
+                Select a region on the map to view detailed market intelligence and risk analysis
+              </p>
+            </div>
+            <RegionalMap onRegionSelect={setSelectedRegion} />
+          </div>
+        ) : (
+          <>
+            {/* Show full dashboard when a region is selected */}
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">
+                  Market Intelligence Dashboard
+                </h2>
+                <p className="text-muted-foreground">
+                  Viewing data for selected region
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedRegion(null)}
+                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors font-medium text-sm"
+              >
+                ← Back to Map
+              </button>
+            </div>
 
-          {/* Markets Overview Tab */}
-          <TabsContent value="markets" className="space-y-8">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 mb-8">
+                <TabsTrigger value="markets" className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  Markets
+                </TabsTrigger>
+                <TabsTrigger value="risk" className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Risk Analysis
+                </TabsTrigger>
+                <TabsTrigger value="forecasts" className="flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Forecasts
+                </TabsTrigger>
+                <TabsTrigger value="alerts" className="flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Alerts
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Markets Overview Tab */}
+              <TabsContent value="markets" className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               <MetricCard
                 title="Electricity (PJM)"
@@ -226,11 +257,13 @@ const Index = () => {
             <PriceForecast />
           </TabsContent>
 
-          {/* Alerts Tab */}
-          <TabsContent value="alerts" className="space-y-8">
-            <AlertFeed />
-          </TabsContent>
-        </Tabs>
+              {/* Alerts Tab */}
+              <TabsContent value="alerts" className="space-y-8">
+                <AlertFeed />
+              </TabsContent>
+            </Tabs>
+          </>
+        )}
       </main>
     </div>
   );

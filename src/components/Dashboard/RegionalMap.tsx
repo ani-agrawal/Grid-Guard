@@ -141,10 +141,10 @@ const regions: RegionData[] = [
 ];
 
 // Leaflet map component that loads only on client side
-const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: { 
+const LeafletMap = ({ regions, selectedRegion, handleRegionSelect }: { 
   regions: RegionData[];
   selectedRegion: RegionData | null; 
-  setSelectedRegion: (region: RegionData | null) => void;
+  handleRegionSelect: (region: RegionData) => void;
 }) => {
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('dark');
   const mapRef = useRef<any>(null);
@@ -245,7 +245,7 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: {
         markersRef.current.set(region.id, marker);
 
         marker.on('click', () => {
-          setSelectedRegion(region);
+          handleRegionSelect(region);
         });
       });
     });
@@ -257,7 +257,7 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: {
       }
       markersRef.current.clear();
     };
-  }, [setSelectedRegion]);
+  }, []);
 
   // Update tile layer when theme changes
   useEffect(() => {
@@ -289,11 +289,22 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: {
   return <div id="map-container" style={{ width: '100%', height: '100%' }} />;
 };
 
-export const RegionalMap = () => {
+interface RegionalMapProps {
+  onRegionSelect?: (regionId: string) => void;
+}
+
+export const RegionalMap = ({ onRegionSelect }: RegionalMapProps = {}) => {
   const [selectedRegion, setSelectedRegion] = useState<RegionData | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const { data: energyData, isLoading } = useEnergyPrices();
   const { convertPrice } = useCurrencyConversion();
+
+  const handleRegionSelect = (region: RegionData) => {
+    setSelectedRegion(region);
+    if (onRegionSelect) {
+      onRegionSelect(region.id);
+    }
+  };
   
   // Merge real API data with static regions
   const enrichedRegions = regions.map(region => {
@@ -342,7 +353,7 @@ export const RegionalMap = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 rounded-lg overflow-hidden h-[600px] border border-primary/20 bg-background">
             {isMounted ? (
-              <LeafletMap regions={enrichedRegions} selectedRegion={selectedRegion} setSelectedRegion={setSelectedRegion} />
+              <LeafletMap regions={enrichedRegions} selectedRegion={selectedRegion} handleRegionSelect={handleRegionSelect} />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <p className="text-muted-foreground">Loading map...</p>
@@ -401,7 +412,7 @@ export const RegionalMap = () => {
                 {enrichedRegions.map((region) => (
                   <button
                     key={region.id}
-                    onClick={() => setSelectedRegion(region)}
+                    onClick={() => handleRegionSelect(region)}
                     className={`w-full p-3 rounded-lg border transition-colors text-left ${
                       selectedRegion?.id === region.id
                         ? 'bg-primary/10 border-primary'
