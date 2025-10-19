@@ -249,11 +249,11 @@ export const PriceForecast = () => {
               <div className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wide">
                 Oil & Gas Markets
               </div>
-              <TabsList className={`grid w-full`} style={{ 
-                gridTemplateColumns: `repeat(${Math.min(forecasts.filter(f => f.marketType !== "Electricity").length, 4)}, minmax(0, 1fr))` 
+              <TabsList className="grid w-full gap-2" style={{ 
+                gridTemplateColumns: `repeat(auto-fit, minmax(120px, 1fr))` 
               }}>
                 {forecasts.filter(f => f.marketType !== "Electricity").map((forecast) => (
-                  <TabsTrigger key={forecast.region} value={forecast.region} className="text-xs sm:text-sm">
+                  <TabsTrigger key={forecast.region} value={forecast.region} className="text-xs sm:text-sm px-2">
                     {forecast.region}
                   </TabsTrigger>
                 ))}
