@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown } from "lucide-react";
+import { useEnergyPrices } from "@/hooks/useEnergyPrices";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface RegionData {
   id: string;
@@ -138,7 +140,8 @@ const regions: RegionData[] = [
 ];
 
 // Leaflet map component that loads only on client side
-const LeafletMap = ({ selectedRegion, setSelectedRegion }: { 
+const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: { 
+  regions: RegionData[];
   selectedRegion: RegionData | null; 
   setSelectedRegion: (region: RegionData | null) => void;
 }) => {
@@ -264,6 +267,27 @@ const LeafletMap = ({ selectedRegion, setSelectedRegion }: {
 export const RegionalMap = () => {
   const [selectedRegion, setSelectedRegion] = useState<RegionData | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const { data: energyData, isLoading } = useEnergyPrices();
+  
+  // Merge real API data with static regions
+  const enrichedRegions = regions.map(region => {
+    const liveData = energyData?.energyPrices?.find(
+      (ep: any) => ep.region === region.name || 
+                   ep.region.includes(region.name.split(' ')[0]) ||
+                   region.name.includes(ep.region)
+    );
+    
+    if (liveData) {
+      return {
+        ...region,
+        price: `$${liveData.price}/${region.market.includes('Electricity') ? 'MWh' : region.market.includes('Gas') ? 'MMBtu' : 'bbl'}`,
+        change: liveData.change,
+        threatLevel: liveData.threatLevel.toLowerCase() as "low" | "medium" | "high",
+        forecast: liveData.forecast
+      };
+    }
+    return region;
+  });
 
   useEffect(() => {
     setIsMounted(true);
@@ -282,97 +306,101 @@ export const RegionalMap = () => {
       <div className="mb-4">
         <h2 className="text-2xl font-bold text-foreground mb-2">Regional Market Intelligence</h2>
         <p className="text-sm text-muted-foreground">
-          Select a region to view localized forecasts and threat assessments
+          {energyData?.source ? `Live data from ${energyData.source}` : 'Select a region to view localized forecasts and threat assessments'}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 rounded-lg overflow-hidden h-[600px] border border-primary/20 bg-background">
-          {isMounted ? (
-            <LeafletMap selectedRegion={selectedRegion} setSelectedRegion={setSelectedRegion} />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <p className="text-muted-foreground">Loading map...</p>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4">
-          {selectedRegion ? (
-            <Card className="p-4 bg-accent/50 border-primary/30">
-              <div className="space-y-3">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-bold text-lg text-foreground">{selectedRegion.name}</h3>
-                    <Badge variant={getThreatBadgeVariant(selectedRegion.threatLevel)}>
-                      {selectedRegion.threatLevel.toUpperCase()}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{selectedRegion.market}</p>
-                </div>
-
-                <div className="flex items-center justify-between py-3 border-y border-primary/20">
-                  <span className="text-2xl font-bold text-foreground">{selectedRegion.price}</span>
-                  <div className={`flex items-center gap-1 ${selectedRegion.change >= 0 ? 'text-success' : 'text-destructive'}`}>
-                    {selectedRegion.change >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
-                    <span className="font-semibold">{Math.abs(selectedRegion.change)}%</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-sm text-foreground">72h Forecast:</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {selectedRegion.forecast}
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => window.location.href = `/market/${selectedRegion.id}`}
-                  className="w-full mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
-                >
-                  View Detailed Analysis →
-                </button>
+      {isLoading ? (
+        <Skeleton className="h-[600px] w-full" />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 rounded-lg overflow-hidden h-[600px] border border-primary/20 bg-background">
+            {isMounted ? (
+              <LeafletMap regions={enrichedRegions} selectedRegion={selectedRegion} setSelectedRegion={setSelectedRegion} />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-muted-foreground">Loading map...</p>
               </div>
-            </Card>
-          ) : (
-            <Card className="p-6 bg-accent/30 border-primary/20">
-              <p className="text-center text-muted-foreground">
-                Click on a region marker to view detailed forecast and threat intelligence
-              </p>
-            </Card>
-          )}
+            )}
+          </div>
 
-          <div className="space-y-2">
-            <h4 className="font-semibold text-sm text-foreground">All Regions:</h4>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {regions.map((region) => (
-                <button
-                  key={region.id}
-                  onClick={() => setSelectedRegion(region)}
-                  className={`w-full p-3 rounded-lg border transition-colors text-left ${
-                    selectedRegion?.id === region.id
-                      ? 'bg-primary/10 border-primary'
-                      : 'bg-card/50 border-primary/20 hover:bg-accent/50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm text-foreground">{region.name}</span>
-                    <Badge variant={getThreatBadgeVariant(region.threatLevel)} className="text-xs">
-                      {region.threatLevel}
-                    </Badge>
+          <div className="space-y-4">
+            {selectedRegion ? (
+              <Card className="p-4 bg-accent/50 border-primary/30">
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-bold text-lg text-foreground">{selectedRegion.name}</h3>
+                      <Badge variant={getThreatBadgeVariant(selectedRegion.threatLevel)}>
+                        {selectedRegion.threatLevel.toUpperCase()}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{selectedRegion.market}</p>
                   </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs text-muted-foreground">{region.market}</span>
-                    <span className={`text-xs font-semibold ${region.change >= 0 ? 'text-success' : 'text-destructive'}`}>
-                      {region.change >= 0 ? '+' : ''}{region.change}%
-                    </span>
+
+                  <div className="flex items-center justify-between py-3 border-y border-primary/20">
+                    <span className="text-2xl font-bold text-foreground">{selectedRegion.price}</span>
+                    <div className={`flex items-center gap-1 ${selectedRegion.change >= 0 ? 'text-success' : 'text-destructive'}`}>
+                      {selectedRegion.change >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+                      <span className="font-semibold">{Math.abs(selectedRegion.change)}%</span>
+                    </div>
                   </div>
-                </button>
-              ))}
+
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm text-foreground">72h Forecast:</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {selectedRegion.forecast}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => window.location.href = `/market/${selectedRegion.id}`}
+                    className="w-full mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
+                  >
+                    View Detailed Analysis →
+                  </button>
+                </div>
+              </Card>
+            ) : (
+              <Card className="p-6 bg-accent/30 border-primary/20">
+                <p className="text-center text-muted-foreground">
+                  Click on a region marker to view detailed forecast and threat intelligence
+                </p>
+              </Card>
+            )}
+
+            <div className="space-y-2">
+              <h4 className="font-semibold text-sm text-foreground">All Regions:</h4>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                {enrichedRegions.map((region) => (
+                  <button
+                    key={region.id}
+                    onClick={() => setSelectedRegion(region)}
+                    className={`w-full p-3 rounded-lg border transition-colors text-left ${
+                      selectedRegion?.id === region.id
+                        ? 'bg-primary/10 border-primary'
+                        : 'bg-card/50 border-primary/20 hover:bg-accent/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm text-foreground">{region.name}</span>
+                      <Badge variant={getThreatBadgeVariant(region.threatLevel)} className="text-xs">
+                        {region.threatLevel}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs text-muted-foreground">{region.market}</span>
+                      <span className={`text-xs font-semibold ${region.change >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        {region.change >= 0 ? '+' : ''}{region.change}%
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </Card>
   );
 };
