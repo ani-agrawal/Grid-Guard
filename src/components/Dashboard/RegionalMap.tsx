@@ -404,9 +404,9 @@ export const RegionalMap = () => {
             )}
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 flex flex-col h-[700px]">
             {selectedRegion ? (
-              <Card className="p-4 bg-accent/50 border-primary/30">
+              <Card className="p-4 bg-accent/50 border-primary/30 flex-shrink-0">
                 <div className="space-y-3">
                   <div>
                     <div className="flex items-center justify-between mb-2">
@@ -442,16 +442,16 @@ export const RegionalMap = () => {
                 </div>
               </Card>
             ) : (
-              <Card className="p-6 bg-accent/30 border-primary/20">
+              <Card className="p-6 bg-accent/30 border-primary/20 flex-shrink-0">
                 <p className="text-center text-muted-foreground">
                   Click on a region marker to view detailed forecast and threat intelligence
                 </p>
               </Card>
             )}
 
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm text-foreground">All Regions:</h4>
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            <div className="flex flex-col flex-1 min-h-0">
+              <h4 className="font-semibold text-sm text-foreground mb-2">All Regions:</h4>
+              <div className="flex-1 space-y-2 overflow-y-auto pr-2">
                 {enrichedRegions.map((region) => (
                   <button
                     key={region.id}
