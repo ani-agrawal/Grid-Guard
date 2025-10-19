@@ -4,11 +4,12 @@ import { ThreatGauge } from "@/components/Dashboard/ThreatGauge";
 import { PriceForecast } from "@/components/Dashboard/PriceForecast";
 import { AlertFeed } from "@/components/Dashboard/AlertFeed";
 import { CorrelationChart } from "@/components/Dashboard/CorrelationChart";
+import { MajorNews } from "@/components/Dashboard/MajorNews";
 import { RegionalMap } from "@/components/Dashboard/RegionalMap";
 import { RiskScoreCards } from "@/components/Dashboard/RiskScoreCards";
 import { ThreatAssetLinker } from "@/components/Dashboard/ThreatAssetLinker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Zap, DollarSign, Fuel, Shield, Globe, Wind, Sun, TrendingUp, AlertTriangle, Activity } from "lucide-react";
+import { Zap, DollarSign, Fuel, Shield, Globe, Wind, Sun, TrendingUp, AlertTriangle, Activity, Newspaper } from "lucide-react";
 import { useEnergyPrices } from "@/hooks/useEnergyPrices";
 import { useCVEData } from "@/hooks/useCVEData";
 import { useRiskScores } from "@/hooks/useRiskScores";
@@ -48,7 +49,7 @@ const Index = () => {
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab && ["markets", "risk", "forecasts", "alerts"].includes(tab)) {
+    if (tab && ["markets", "risk", "forecasts", "news", "alerts"].includes(tab)) {
       setActiveTab(tab);
     }
   }, [searchParams]);
@@ -64,7 +65,7 @@ const Index = () => {
       
       <main className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="markets" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
               Markets
@@ -76,6 +77,10 @@ const Index = () => {
             <TabsTrigger value="forecasts" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Forecasts
+            </TabsTrigger>
+            <TabsTrigger value="news" className="flex items-center gap-2">
+              <Newspaper className="h-4 w-4" />
+              Major News
             </TabsTrigger>
             <TabsTrigger value="alerts" className="flex items-center gap-2">
               <Shield className="h-4 w-4" />
@@ -236,6 +241,11 @@ const Index = () => {
           {/* Forecasts Tab */}
           <TabsContent value="forecasts" className="space-y-8">
             <PriceForecast />
+          </TabsContent>
+
+          {/* Major News Tab */}
+          <TabsContent value="news" className="space-y-8">
+            <MajorNews />
           </TabsContent>
 
           {/* Alerts Tab */}
