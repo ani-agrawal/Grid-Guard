@@ -5,6 +5,8 @@ import { PriceForecast } from "@/components/Dashboard/PriceForecast";
 import { AlertFeed } from "@/components/Dashboard/AlertFeed";
 import { CorrelationChart } from "@/components/Dashboard/CorrelationChart";
 import { RegionalMap } from "@/components/Dashboard/RegionalMap";
+import { RiskScoreCards } from "@/components/Dashboard/RiskScoreCards";
+import { ThreatAssetLinker } from "@/components/Dashboard/ThreatAssetLinker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Zap, DollarSign, Fuel, Shield, Globe, Wind, Sun, TrendingUp, AlertTriangle, Activity } from "lucide-react";
 
@@ -112,6 +114,23 @@ const Index = () => {
 
           {/* Risk Analysis Tab */}
           <TabsContent value="risk" className="space-y-8">
+            {/* Proprietary Risk Scores */}
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  Proprietary Risk Scores
+                </h2>
+                <p className="text-muted-foreground">
+                  Advanced analytics combining cyber threats, geopolitical events, and infrastructure criticality
+                </p>
+              </div>
+              <RiskScoreCards />
+            </div>
+
+            {/* Threat-to-Asset Linkages */}
+            <ThreatAssetLinker />
+
+            {/* Traditional Threat Gauges */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ThreatGauge
                 title="Cyber Threat Index"

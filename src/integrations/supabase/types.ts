@@ -14,7 +14,137 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      risk_scores: {
+        Row: {
+          calculated_at: string
+          cpsi: number
+          created_at: string
+          ecs: number
+          explanation: Json | null
+          gei: number
+          id: string
+          impact_probability: number
+          region: string
+          volatility_index: number
+        }
+        Insert: {
+          calculated_at?: string
+          cpsi: number
+          created_at?: string
+          ecs: number
+          explanation?: Json | null
+          gei: number
+          id?: string
+          impact_probability: number
+          region: string
+          volatility_index: number
+        }
+        Update: {
+          calculated_at?: string
+          cpsi?: number
+          created_at?: string
+          ecs?: number
+          explanation?: Json | null
+          gei?: number
+          id?: string
+          impact_probability?: number
+          region?: string
+          volatility_index?: number
+        }
+        Relationships: []
+      }
+      threat_asset_links: {
+        Row: {
+          asset_name: string
+          asset_type: string
+          confidence_level: string | null
+          created_at: string
+          id: string
+          impact_score: number
+          price_impact_24h: number | null
+          reasoning: string | null
+          region: string
+          spillover_regions: string[] | null
+          threat_event_id: string | null
+        }
+        Insert: {
+          asset_name: string
+          asset_type: string
+          confidence_level?: string | null
+          created_at?: string
+          id?: string
+          impact_score: number
+          price_impact_24h?: number | null
+          reasoning?: string | null
+          region: string
+          spillover_regions?: string[] | null
+          threat_event_id?: string | null
+        }
+        Update: {
+          asset_name?: string
+          asset_type?: string
+          confidence_level?: string | null
+          created_at?: string
+          id?: string
+          impact_score?: number
+          price_impact_24h?: number | null
+          reasoning?: string | null
+          region?: string
+          spillover_regions?: string[] | null
+          threat_event_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "threat_asset_links_threat_event_id_fkey"
+            columns: ["threat_event_id"]
+            isOneToOne: false
+            referencedRelation: "threat_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      threat_events: {
+        Row: {
+          affected_assets: string[]
+          affected_regions: string[]
+          confidence_score: number | null
+          created_at: string
+          description: string | null
+          detected_at: string
+          event_type: string
+          id: string
+          severity: string
+          source: string | null
+          title: string
+        }
+        Insert: {
+          affected_assets: string[]
+          affected_regions: string[]
+          confidence_score?: number | null
+          created_at?: string
+          description?: string | null
+          detected_at?: string
+          event_type: string
+          id?: string
+          severity: string
+          source?: string | null
+          title: string
+        }
+        Update: {
+          affected_assets?: string[]
+          affected_regions?: string[]
+          confidence_score?: number | null
+          created_at?: string
+          description?: string | null
+          detected_at?: string
+          event_type?: string
+          id?: string
+          severity?: string
+          source?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
