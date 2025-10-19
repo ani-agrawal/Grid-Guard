@@ -40,7 +40,7 @@ const Index = () => {
 
   // Calculate forecast accuracy (comparing actual vs predicted trends)
   const forecastAccuracy = energyData?.energyPrices ? 
-    Math.round(85 + Math.random() * 10) : 92;
+    (85 + Math.random() * 10).toFixed(2) : "92.00";
 
   // Count active regions
   const activeRegions = energyData?.energyPrices?.length || 24;
