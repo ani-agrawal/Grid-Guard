@@ -55,11 +55,11 @@ export const MetricCard = ({
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm text-muted-foreground">{title}</p>
             {source && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <span className="text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded">
                   {source}
                 </span>
-                <div className={cn("h-1.5 w-1.5 rounded-full", getLagColor())} title={`Updated ${lastUpdated}m ago`} />
+                <div className={cn("h-2 w-2 rounded-full", getLagColor())} title={`Updated ${lastUpdated}m ago`} />
               </div>
             )}
           </div>
