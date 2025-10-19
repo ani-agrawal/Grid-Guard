@@ -337,10 +337,10 @@ export const RegionalMap = () => {
       </div>
 
       {isLoading ? (
-        <Skeleton className="h-[600px] w-full" />
+        <Skeleton className="h-[700px] w-full" />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 rounded-lg overflow-hidden h-[600px] border border-primary/20 bg-background">
+          <div className="lg:col-span-2 rounded-lg overflow-hidden h-[700px] border border-primary/20 bg-background">
             {isMounted ? (
               <LeafletMap regions={enrichedRegions} selectedRegion={selectedRegion} setSelectedRegion={setSelectedRegion} />
             ) : (
