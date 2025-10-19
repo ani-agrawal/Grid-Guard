@@ -13,10 +13,10 @@ export const DashboardHeader = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">
-                Energy Risk Intelligence
+                GridGuard
               </h1>
               <p className="text-xs text-muted-foreground">
-                Geopolitical & Cyber Threat Analytics
+                Geopolitical & Cyber Threat Dashboard
               </p>
             </div>
           </div>
