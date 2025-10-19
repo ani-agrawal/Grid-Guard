@@ -75,6 +75,66 @@ const regions: RegionData[] = [
     threatLevel: "low",
     forecast: "↘ -2-3% decline expected, minimal threat activity"
   },
+  {
+    id: "singapore",
+    name: "Singapore Hub",
+    position: [1.35, 103.8],
+    market: "LNG & Electricity",
+    price: "$4.20/MMBtu",
+    change: 2.8,
+    threatLevel: "medium",
+    forecast: "↗ +4-6% expected from regional LNG supply chain vulnerabilities"
+  },
+  {
+    id: "japan",
+    name: "Tokyo (JEPX)",
+    position: [35.7, 139.7],
+    market: "Electricity",
+    price: "¥8,500/MWh",
+    change: 3.5,
+    threatLevel: "medium",
+    forecast: "↗ Moderate increase expected from SCADA system vulnerability disclosures"
+  },
+  {
+    id: "china",
+    name: "Shanghai Energy Exchange",
+    position: [31.2, 121.5],
+    market: "Oil & Gas",
+    price: "¥520/barrel",
+    change: 1.5,
+    threatLevel: "low",
+    forecast: "→ Stable outlook with minor supply chain monitoring"
+  },
+  {
+    id: "india",
+    name: "India Energy Exchange",
+    position: [28.6, 77.2],
+    market: "Electricity",
+    price: "₹4.50/kWh",
+    change: 4.8,
+    threatLevel: "high",
+    forecast: "⚠ +7-10% spike risk from critical infrastructure targeting and grid strain"
+  },
+  {
+    id: "australia",
+    name: "Australian NEM",
+    position: [-33.9, 151.2],
+    market: "Electricity",
+    price: "A$95/MWh",
+    change: 2.1,
+    threatLevel: "medium",
+    forecast: "↗ +3-4% expected from increased OT targeting in mining sector"
+  },
+  {
+    id: "newzealand",
+    name: "New Zealand Grid",
+    position: [-41.3, 174.8],
+    market: "Electricity",
+    price: "NZ$120/MWh",
+    change: -0.5,
+    threatLevel: "low",
+    forecast: "→ Stable with minimal threat activity detected"
+  },
 ];
 
 // Leaflet map component that loads only on client side
