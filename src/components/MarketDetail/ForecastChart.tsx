@@ -1,6 +1,10 @@
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 import {
   LineChart,
   Line,
@@ -27,11 +31,43 @@ interface ForecastData {
   bearCase: number;
 }
 
+type TimeInterval = '30s' | '1min' | '5min' | '15min' | '30min' | '1h' | '3h' | '6h' | '8h' | '12h' | '24h';
+
+const intervalMinutes: Record<TimeInterval, number> = {
+  '30s': 0.5,
+  '1min': 1,
+  '5min': 5,
+  '15min': 15,
+  '30min': 30,
+  '1h': 60,
+  '3h': 180,
+  '6h': 360,
+  '8h': 480,
+  '12h': 720,
+  '24h': 1440,
+};
+
+const intervalLabels: Record<TimeInterval, string> = {
+  '30s': '30 Seconds',
+  '1min': '1 Minute',
+  '5min': '5 Minutes',
+  '15min': '15 Minutes',
+  '30min': '30 Minutes',
+  '1h': '1 Hour',
+  '3h': '3 Hours',
+  '6h': '6 Hours',
+  '8h': '8 Hours',
+  '12h': '12 Hours',
+  '24h': '24 Hours',
+};
+
 export const ForecastChart = () => {
   const { id } = useParams();
   const { data, isLoading } = useEnergyPrices();
+  const [showAdjusted, setShowAdjusted] = useState(true);
+  const [timeInterval, setTimeInterval] = useState<TimeInterval>('1h');
 
-  const generateForecastData = (basePrice: number, periods: number, hourlyIncrement: boolean = false): ForecastData[] => {
+  const generateForecastData = (basePrice: number, periods: number, minutes: number): ForecastData[] => {
     const data: ForecastData[] = [];
     const volatility = basePrice * 0.02; // 2% volatility
     
@@ -43,8 +79,24 @@ export const ForecastChart = () => {
       const confidenceSpread = volatility * (1 + i * 0.2);
       const scenarioSpread = volatility * (1.5 + i * 0.3);
       
+      // Format time string
+      let timeStr: string;
+      if (i === 0) {
+        timeStr = 'Now';
+      } else if (minutes < 1) {
+        const seconds = i * minutes * 60;
+        timeStr = `+${seconds}s`;
+      } else if (minutes < 60) {
+        timeStr = `+${i * minutes}m`;
+      } else if (minutes === 60) {
+        timeStr = `+${i}h`;
+      } else {
+        const hours = (i * minutes) / 60;
+        timeStr = `+${hours}h`;
+      }
+      
       data.push({
-        time: hourlyIncrement ? `+${i * 6}h` : `Day ${i}`,
+        time: timeStr,
         actual: i === 0 ? basePrice : undefined,
         forecast: parseFloat(forecast.toFixed(2)),
         confidenceHigh: parseFloat((forecast + confidenceSpread).toFixed(2)),
@@ -75,8 +127,11 @@ export const ForecastChart = () => {
   };
 
   const basePrice = getBasePrice();
-  const nowcastData = generateForecastData(basePrice, 6, true);
-  const forecastData = generateForecastData(basePrice, 7, false);
+  const minutes = intervalMinutes[timeInterval];
+  const totalMinutes = 48 * 60; // 48 hours
+  const totalPoints = Math.floor(totalMinutes / minutes) + 1;
+  const nowcastData = generateForecastData(basePrice, totalPoints, minutes);
+  const forecastData = generateForecastData(basePrice, 7, 1440); // 7 days with 24h intervals
 
   if (isLoading) {
     return (
@@ -90,13 +145,47 @@ export const ForecastChart = () => {
   }
   return (
     <Card className="p-6 bg-gradient-card border-border">
-      <h3 className="text-lg font-semibold text-foreground mb-4">
-        Price Forecasts with Confidence Bands
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-foreground">
+          Price Forecasts with Confidence Bands
+        </h3>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="time-interval" className="text-xs text-muted-foreground whitespace-nowrap">
+              Interval:
+            </Label>
+            <Select value={timeInterval} onValueChange={(value) => setTimeInterval(value as TimeInterval)}>
+              <SelectTrigger id="time-interval" className="w-[140px] h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(intervalLabels) as TimeInterval[]).map((interval) => (
+                  <SelectItem key={interval} value={interval}>
+                    {intervalLabels[interval]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="scenario-toggle" className="text-xs text-muted-foreground">
+              Baseline
+            </Label>
+            <Switch
+              id="scenario-toggle"
+              checked={showAdjusted}
+              onCheckedChange={setShowAdjusted}
+            />
+            <Label htmlFor="scenario-toggle" className="text-xs text-foreground font-medium">
+              Risk-Adjusted
+            </Label>
+          </div>
+        </div>
+      </div>
       
       <Tabs defaultValue="nowcast" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
-          <TabsTrigger value="nowcast">0-72h Nowcast</TabsTrigger>
+          <TabsTrigger value="nowcast">0-48h Nowcast</TabsTrigger>
           <TabsTrigger value="forecast">7-Day Forecast</TabsTrigger>
         </TabsList>
         
@@ -109,16 +198,21 @@ export const ForecastChart = () => {
           <ResponsiveContainer width="100%" height={350}>
             <AreaChart data={nowcastData}>
               <defs>
-                <linearGradient id="confidenceBand" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
+                <linearGradient id="confidenceBandNow" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.5}/>
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.1}/>
+                </linearGradient>
+                <linearGradient id="baselineGradientNow" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.5}/>
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
               <XAxis
                 dataKey="time"
                 stroke="hsl(var(--muted-foreground))"
                 style={{ fontSize: "12px" }}
+                interval={Math.max(1, Math.floor(nowcastData.length / 12))}
               />
               <YAxis
                 stroke="hsl(var(--muted-foreground))"
@@ -133,33 +227,65 @@ export const ForecastChart = () => {
                 }}
               />
               <Legend />
-              <Area
-                type="monotone"
-                dataKey="confidenceHigh"
-                stackId="1"
-                stroke="none"
-                fill="url(#confidenceBand)"
-                name="95% Confidence"
-              />
-              <Area
-                type="monotone"
-                dataKey="confidenceLow"
-                stackId="1"
-                stroke="none"
-                fill="transparent"
-              />
-              <Line
-                type="monotone"
-                dataKey="forecast"
-                stroke="hsl(var(--primary))"
-                strokeWidth={3}
-                name="Forecast"
-                dot={{ fill: "hsl(var(--primary))", r: 4 }}
-              />
+              
+              {showAdjusted ? (
+                <>
+                  <Area
+                    type="monotone"
+                    dataKey="confidenceHigh"
+                    stackId="1"
+                    stroke="none"
+                    fill="url(#confidenceBandNow)"
+                    fillOpacity={0.6}
+                    name="95% Confidence"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="confidenceLow"
+                    stackId="1"
+                    stroke="none"
+                    fill="url(#confidenceBandNow)"
+                    fillOpacity={0.6}
+                    name="Lower Confidence"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="forecast"
+                    stroke="#f59e0b"
+                    strokeWidth={3}
+                    name="Risk-Adjusted Forecast"
+                    dot={false}
+                    strokeOpacity={1}
+                  />
+                </>
+              ) : (
+                <>
+                  <Area
+                    type="monotone"
+                    dataKey="baseCase"
+                    stroke="#3b82f6"
+                    strokeWidth={3}
+                    fill="url(#baselineGradientNow)"
+                    fillOpacity={0.4}
+                    name="Baseline Forecast"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="forecast"
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    dot={false}
+                    name="Risk-Adjusted (ref)"
+                    strokeOpacity={0.9}
+                  />
+                </>
+              )}
+              
               <Line
                 type="monotone"
                 dataKey="actual"
-                stroke="hsl(var(--success))"
+                stroke="#10b981"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 name="Actual"
@@ -176,15 +302,15 @@ export const ForecastChart = () => {
             </p>
             <div className="flex gap-4 text-xs">
               <div className="flex items-center gap-1">
-                <div className="h-2 w-2 rounded-full bg-primary" />
+                <div className="h-2 w-2 rounded-full" style={{ background: '#3b82f6' }} />
                 <span className="text-muted-foreground">Base Case</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="h-2 w-2 rounded-full bg-success" />
+                <div className="h-2 w-2 rounded-full" style={{ background: '#10b981' }} />
                 <span className="text-muted-foreground">Bull Case (Low Threat)</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="h-2 w-2 rounded-full bg-destructive" />
+                <div className="h-2 w-2 rounded-full" style={{ background: '#ef4444' }} />
                 <span className="text-muted-foreground">Bear Case (High Threat)</span>
               </div>
             </div>
@@ -193,11 +319,11 @@ export const ForecastChart = () => {
             <LineChart data={forecastData}>
               <defs>
                 <linearGradient id="forecastBand" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.15}/>
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.5}/>
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.1}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
               <XAxis
                 dataKey="time"
                 stroke="hsl(var(--muted-foreground))"
@@ -219,28 +345,31 @@ export const ForecastChart = () => {
               <Line
                 type="monotone"
                 dataKey="bullCase"
-                stroke="hsl(var(--success))"
+                stroke="#10b981"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 name="Bull Case"
                 dot={false}
+                strokeOpacity={1}
               />
               <Line
                 type="monotone"
                 dataKey="bearCase"
-                stroke="hsl(var(--destructive))"
+                stroke="#ef4444"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 name="Bear Case"
                 dot={false}
+                strokeOpacity={1}
               />
               <Line
                 type="monotone"
                 dataKey="baseCase"
-                stroke="hsl(var(--primary))"
+                stroke="#3b82f6"
                 strokeWidth={3}
                 name="Base Case"
-                dot={{ fill: "hsl(var(--primary))", r: 4 }}
+                dot={{ fill: "#3b82f6", r: 4 }}
+                strokeOpacity={1}
               />
             </LineChart>
           </ResponsiveContainer>
