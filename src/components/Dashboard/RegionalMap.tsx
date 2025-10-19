@@ -23,7 +23,7 @@ const regions: RegionData[] = [
     name: "PJM Interconnection",
     position: [40.0, -77.0],
     market: "Electricity",
-    price: "$46.80/MWh",
+    price: "46.80",
     change: 2.4,
     threatLevel: "medium",
     forecast: "↗ +3-5% expected in 72h due to ransomware activity targeting utility vendors"
@@ -33,7 +33,7 @@ const regions: RegionData[] = [
     name: "ERCOT (Texas)",
     position: [31.0, -99.0],
     market: "Electricity",
-    price: "$52.30/MWh",
+    price: "52.30",
     change: 4.2,
     threatLevel: "high",
     forecast: "⚠ +8-12% spike risk from grid infrastructure vulnerabilities"
@@ -43,7 +43,7 @@ const regions: RegionData[] = [
     name: "CAISO (California)",
     position: [36.7, -119.7],
     market: "Electricity",
-    price: "$58.90/MWh",
+    price: "58.90",
     change: 1.8,
     threatLevel: "medium",
     forecast: "→ Stable, minor increase expected from geopolitical tensions"
@@ -53,7 +53,7 @@ const regions: RegionData[] = [
     name: "North Sea Brent",
     position: [56.0, 3.0],
     market: "Oil",
-    price: "$87.10/bbl",
+    price: "87.10",
     change: 3.2,
     threatLevel: "high",
     forecast: "↗ +5-7% likely from maritime infrastructure reconnaissance"
@@ -63,7 +63,7 @@ const regions: RegionData[] = [
     name: "Persian Gulf",
     position: [26.0, 52.0],
     market: "Oil & Gas",
-    price: "$89.50/bbl",
+    price: "89.50",
     change: 5.1,
     threatLevel: "high",
     forecast: "⚠ High volatility expected from Iran-Israel proxy escalation"
@@ -73,7 +73,7 @@ const regions: RegionData[] = [
     name: "Henry Hub (Louisiana)",
     position: [30.0, -92.7],
     market: "Natural Gas",
-    price: "$3.45/MMBtu",
+    price: "3.45",
     change: -1.8,
     threatLevel: "low",
     forecast: "↘ -2-3% decline expected, minimal threat activity"
@@ -83,7 +83,7 @@ const regions: RegionData[] = [
     name: "Singapore Hub",
     position: [1.35, 103.8],
     market: "LNG & Electricity",
-    price: "$4.20/MMBtu",
+    price: "4.20",
     change: 2.8,
     threatLevel: "medium",
     forecast: "↗ +4-6% expected from regional LNG supply chain vulnerabilities"
@@ -93,7 +93,7 @@ const regions: RegionData[] = [
     name: "Tokyo (JEPX)",
     position: [35.7, 139.7],
     market: "Electricity",
-    price: "¥8,500/MWh",
+    price: "8500",
     change: 3.5,
     threatLevel: "medium",
     forecast: "↗ Moderate increase expected from SCADA system vulnerability disclosures"
@@ -103,7 +103,7 @@ const regions: RegionData[] = [
     name: "Shanghai Energy Exchange",
     position: [31.2, 121.5],
     market: "Oil & Gas",
-    price: "¥520/barrel",
+    price: "520",
     change: 1.5,
     threatLevel: "low",
     forecast: "→ Stable outlook with minor supply chain monitoring"
@@ -113,7 +113,7 @@ const regions: RegionData[] = [
     name: "India Energy Exchange",
     position: [28.6, 77.2],
     market: "Electricity",
-    price: "₹4.50/kWh",
+    price: "4.50",
     change: 4.8,
     threatLevel: "high",
     forecast: "⚠ +7-10% spike risk from critical infrastructure targeting and grid strain"
@@ -123,7 +123,7 @@ const regions: RegionData[] = [
     name: "Australian NEM",
     position: [-33.9, 151.2],
     market: "Electricity",
-    price: "A$95/MWh",
+    price: "95",
     change: 2.1,
     threatLevel: "medium",
     forecast: "↗ +3-4% expected from increased OT targeting in mining sector"
@@ -133,7 +133,7 @@ const regions: RegionData[] = [
     name: "New Zealand Grid",
     position: [-41.3, 174.8],
     market: "Electricity",
-    price: "NZ$120/MWh",
+    price: "120",
     change: -0.5,
     threatLevel: "low",
     forecast: "→ Stable with minimal threat activity detected"
@@ -141,10 +141,11 @@ const regions: RegionData[] = [
 ];
 
 // Leaflet map component that loads only on client side
-const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: { 
+const LeafletMap = ({ regions, selectedRegion, setSelectedRegion, convertPrice }: { 
   regions: RegionData[];
   selectedRegion: RegionData | null; 
   setSelectedRegion: (region: RegionData | null) => void;
+  convertPrice: (price: number) => string;
 }) => {
   const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('dark');
   const mapRef = useRef<any>(null);
@@ -264,13 +265,16 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: {
           iconAnchor: [12, 12],
         });
 
+        const numericPrice = parseFloat(region.price);
+        const formattedPrice = isNaN(numericPrice) ? region.price : `${convertPrice(numericPrice)}/${region.market.includes('Electricity') ? 'MWh' : region.market.includes('Gas') ? 'MMBtu' : 'bbl'}`;
+        
         const marker = L.marker(region.position as [number, number], { icon: customIcon })
           .addTo(map)
           .bindPopup(`
             <div style="padding: 8px; min-width: 200px;">
               <h3 style="font-weight: bold; margin-bottom: 4px;">${region.name}</h3>
               <p style="font-size: 14px; color: #666; margin-bottom: 8px;">${region.market}</p>
-              <p style="font-size: 14px; font-weight: 600;">${region.price}</p>
+              <p style="font-size: 14px; font-weight: 600;">${formattedPrice}</p>
               <span style="display: inline-block; margin-top: 8px; padding: 2px 8px; background: ${color}; color: white; border-radius: 4px; font-size: 12px; font-weight: 600;">
                 ${region.threatLevel.toUpperCase()}
               </span>
@@ -366,7 +370,12 @@ export const RegionalMap = () => {
         forecast: liveData.forecast
       };
     }
-    return region;
+    // Convert static region price to current currency
+    const numericPrice = parseFloat(region.price);
+    return {
+      ...region,
+      price: `${convertPrice(numericPrice)}/${region.market.includes('Electricity') ? 'MWh' : region.market.includes('Gas') ? 'MMBtu' : 'bbl'}`
+    };
   });
 
   useEffect(() => {
@@ -396,7 +405,7 @@ export const RegionalMap = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 rounded-lg overflow-hidden h-[700px] border border-primary/20 bg-background">
             {isMounted ? (
-              <LeafletMap regions={enrichedRegions} selectedRegion={selectedRegion} setSelectedRegion={setSelectedRegion} />
+              <LeafletMap regions={enrichedRegions} selectedRegion={selectedRegion} setSelectedRegion={setSelectedRegion} convertPrice={convertPrice} />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <p className="text-muted-foreground">Loading map...</p>

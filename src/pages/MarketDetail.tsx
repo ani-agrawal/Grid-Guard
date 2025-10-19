@@ -7,6 +7,7 @@ import { ForecastChart } from "@/components/MarketDetail/ForecastChart";
 import { RiskTape } from "@/components/MarketDetail/RiskTape";
 import { EvidencePanel } from "@/components/MarketDetail/EvidencePanel";
 import { ThreatAssetGraph } from "@/components/MarketDetail/ThreatAssetGraph";
+import { useCurrencyConversion } from "@/hooks/useCurrencyConversion";
 import {
   LineChart,
   Line,
@@ -541,6 +542,7 @@ const marketData = {
 const MarketDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { convertPrice, getSymbol } = useCurrencyConversion();
   
   const market = marketData[id as keyof typeof marketData];
 
@@ -583,7 +585,7 @@ const MarketDetail = () => {
             </div>
             <div className="text-right">
               <div className="text-5xl font-bold text-foreground mb-1">
-                ${market.currentPrice}
+                {convertPrice(market.currentPrice)}
               </div>
               <div className="flex items-center gap-2 justify-end">
                 {market.change > 0 ? (
@@ -638,7 +640,7 @@ const MarketDetail = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">48h Forecast</p>
-                  <p className="text-2xl font-bold text-primary">${market.forecast48h}</p>
+                  <p className="text-2xl font-bold text-primary">{convertPrice(market.forecast48h)}</p>
                 </div>
               </div>
             </Card>

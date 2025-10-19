@@ -297,7 +297,7 @@ export const PriceForecast = () => {
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))"
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                  tickFormatter={(value) => `$${value.toFixed(0)}`}
+                  tickFormatter={(value) => `${convertPrice(value)}`}
                 />
                 <Tooltip 
                   contentStyle={{
@@ -306,7 +306,7 @@ export const PriceForecast = () => {
                     borderRadius: '8px',
                   }}
                   labelStyle={{ color: 'hsl(var(--foreground))' }}
-                  formatter={(value: number) => [`$${value.toFixed(2)}`, '']}
+                  formatter={(value: number) => [convertPrice(value), '']}
                 />
                 <Legend 
                   wrapperStyle={{
