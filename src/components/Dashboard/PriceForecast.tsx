@@ -198,8 +198,8 @@ export const PriceForecast = () => {
               <AreaChart data={forecast.data}>
                 <defs>
                   <linearGradient id="confidenceGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
@@ -255,7 +255,7 @@ export const PriceForecast = () => {
                 <Line
                   type="monotone"
                   dataKey={showAdjusted ? "riskAdjusted" : "baseline"}
-                  stroke="hsl(var(--primary))"
+                  stroke={showAdjusted ? "#f59e0b" : "#3b82f6"}
                   strokeWidth={3}
                   dot={false}
                   name={showAdjusted ? "Risk-Adjusted" : "Baseline"}
@@ -265,7 +265,7 @@ export const PriceForecast = () => {
                   <Line
                     type="monotone"
                     dataKey="riskAdjusted"
-                    stroke="hsl(var(--destructive))"
+                    stroke="#ef4444"
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     dot={false}
