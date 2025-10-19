@@ -201,6 +201,10 @@ export const PriceForecast = () => {
                     <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.5}/>
                     <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.1}/>
                   </linearGradient>
+                  <linearGradient id="baselineGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.5}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                  </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                 <XAxis 
@@ -229,7 +233,7 @@ export const PriceForecast = () => {
                   }}
                 />
                 
-                {showAdjusted && (
+                {showAdjusted ? (
                   <>
                     <Area
                       type="monotone"
@@ -249,30 +253,38 @@ export const PriceForecast = () => {
                       fillOpacity={0.6}
                       name="Lower Confidence"
                     />
+                    <Line
+                      type="monotone"
+                      dataKey="riskAdjusted"
+                      stroke="#f59e0b"
+                      strokeWidth={3}
+                      dot={false}
+                      name="Risk-Adjusted"
+                      strokeOpacity={1}
+                    />
                   </>
-                )}
-                
-                <Line
-                  type="monotone"
-                  dataKey={showAdjusted ? "riskAdjusted" : "baseline"}
-                  stroke={showAdjusted ? "#f59e0b" : "#3b82f6"}
-                  strokeWidth={3}
-                  dot={false}
-                  name={showAdjusted ? "Risk-Adjusted" : "Baseline"}
-                  strokeOpacity={1}
-                />
-                
-                {!showAdjusted && (
-                  <Line
-                    type="monotone"
-                    dataKey="riskAdjusted"
-                    stroke="#ef4444"
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    dot={false}
-                    name="Risk-Adjusted (ref)"
-                    strokeOpacity={0.9}
-                  />
+                ) : (
+                  <>
+                    <Area
+                      type="monotone"
+                      dataKey="baseline"
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      fill="url(#baselineGradient)"
+                      fillOpacity={0.4}
+                      name="Baseline Forecast"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="riskAdjusted"
+                      stroke="#ef4444"
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={false}
+                      name="Risk-Adjusted (ref)"
+                      strokeOpacity={0.9}
+                    />
+                  </>
                 )}
               </AreaChart>
             </ResponsiveContainer>
