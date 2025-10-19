@@ -4,6 +4,7 @@ import { ThreatGauge } from "@/components/Dashboard/ThreatGauge";
 import { PriceForecast } from "@/components/Dashboard/PriceForecast";
 import { AlertFeed } from "@/components/Dashboard/AlertFeed";
 import { CorrelationChart } from "@/components/Dashboard/CorrelationChart";
+import { RegionalMap } from "@/components/Dashboard/RegionalMap";
 import { Zap, DollarSign, Fuel, Shield, Globe } from "lucide-react";
 
 const Index = () => {
@@ -44,6 +45,11 @@ const Index = () => {
             subtitle="per MMBtu"
             marketId="natgas"
           />
+        </div>
+
+        {/* Regional Map */}
+        <div className="mb-8">
+          <RegionalMap />
         </div>
 
         {/* Threat Indices */}
