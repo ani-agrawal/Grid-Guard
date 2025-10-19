@@ -50,22 +50,22 @@ export const MetricCard = ({
       )}
       onClick={handleClick}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-muted-foreground">{title}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <p className="text-sm text-muted-foreground truncate">{title}</p>
             {source && (
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-[10px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded whitespace-nowrap">
                   {source}
                 </span>
-                <div className={cn("h-2 w-2 rounded-full", getLagColor())} title={`Updated ${lastUpdated}m ago`} />
+                <div className={cn("h-2 w-2 rounded-full flex-shrink-0", getLagColor())} title={`Updated ${lastUpdated}m ago`} />
               </div>
             )}
           </div>
-          <p className="text-3xl font-bold text-foreground mb-1">{value}</p>
+          <p className="text-3xl font-bold text-foreground mb-1 truncate">{value}</p>
           {subtitle && (
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
+            <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
           )}
           {change && (
             <div className="flex items-center gap-1 mt-2">
@@ -86,7 +86,7 @@ export const MetricCard = ({
         </div>
         <div
           className={cn(
-            "h-12 w-12 rounded-xl flex items-center justify-center",
+            "h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0",
             gradient === "primary" && "bg-gradient-primary shadow-glow-primary",
             gradient === "cyber" && "bg-gradient-cyber shadow-glow-cyber",
             gradient === "geo" && "bg-gradient-geo shadow-glow-geo"
