@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import type { LatLngExpression } from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
 interface RegionData {
   id: string;
   name: string;
-  position: { lat: number; lng: number };
+  position: LatLngExpression;
   market: string;
   price: string;
   change: number;
@@ -19,7 +21,7 @@ const regions: RegionData[] = [
   {
     id: "pjm",
     name: "PJM Interconnection",
-    position: { lat: 40.0, lng: -77.0 },
+    position: [40.0, -77.0],
     market: "Electricity",
     price: "$46.80/MWh",
     change: 2.4,
@@ -29,7 +31,7 @@ const regions: RegionData[] = [
   {
     id: "ercot",
     name: "ERCOT (Texas)",
-    position: { lat: 31.0, lng: -99.0 },
+    position: [31.0, -99.0],
     market: "Electricity",
     price: "$52.30/MWh",
     change: 4.2,
@@ -39,7 +41,7 @@ const regions: RegionData[] = [
   {
     id: "caiso",
     name: "CAISO (California)",
-    position: { lat: 36.7, lng: -119.7 },
+    position: [36.7, -119.7],
     market: "Electricity",
     price: "$58.90/MWh",
     change: 1.8,
@@ -49,7 +51,7 @@ const regions: RegionData[] = [
   {
     id: "north_sea",
     name: "North Sea Brent",
-    position: { lat: 56.0, lng: 3.0 },
+    position: [56.0, 3.0],
     market: "Oil",
     price: "$87.10/bbl",
     change: 3.2,
@@ -59,7 +61,7 @@ const regions: RegionData[] = [
   {
     id: "persian_gulf",
     name: "Persian Gulf",
-    position: { lat: 26.0, lng: 52.0 },
+    position: [26.0, 52.0],
     market: "Oil & Gas",
     price: "$89.50/bbl",
     change: 5.1,
@@ -69,7 +71,7 @@ const regions: RegionData[] = [
   {
     id: "henry_hub",
     name: "Henry Hub (Louisiana)",
-    position: { lat: 30.0, lng: -92.7 },
+    position: [30.0, -92.7],
     market: "Natural Gas",
     price: "$3.45/MMBtu",
     change: -1.8,
@@ -80,17 +82,8 @@ const regions: RegionData[] = [
 
 export const RegionalMap = () => {
   const [selectedRegion, setSelectedRegion] = useState<RegionData | null>(null);
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-  const getThreatColor = (level: string) => {
-    switch (level) {
-      case "high": return "hsl(var(--destructive))";
-      case "medium": return "hsl(var(--warning))";
-      default: return "hsl(var(--success))";
-    }
-  };
-
-  const getThreatBadgeVariant = (level: string) => {
+  const getThreatBadgeVariant = (level: string): "destructive" | "secondary" | "outline" => {
     switch (level) {
       case "high": return "destructive";
       case "medium": return "secondary";
@@ -109,50 +102,37 @@ export const RegionalMap = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 rounded-lg overflow-hidden h-[600px] border border-primary/20">
-          <APIProvider apiKey={apiKey}>
-            <Map
-              defaultCenter={{ lat: 35.0, lng: -20.0 }}
-              defaultZoom={3}
-              mapId="regional-energy-map"
-              gestureHandling="greedy"
-              disableDefaultUI={false}
-              className="w-full h-full"
-            >
-              {regions.map((region) => (
-                <AdvancedMarker
-                  key={region.id}
-                  position={region.position}
-                  onClick={() => setSelectedRegion(region)}
-                >
-                  <div
-                    className="relative cursor-pointer group"
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                    }}
-                  >
-                    <div
-                      className="absolute inset-0 rounded-full animate-pulse"
-                      style={{
-                        backgroundColor: getThreatColor(region.threatLevel),
-                        opacity: 0.3,
-                      }}
-                    />
-                    <div
-                      className="absolute inset-2 rounded-full group-hover:scale-110 transition-transform"
-                      style={{
-                        backgroundColor: getThreatColor(region.threatLevel),
-                      }}
-                    />
-                    <AlertTriangle
-                      className="absolute inset-0 m-auto text-white"
-                      size={16}
-                    />
+          <MapContainer
+            center={[35.0, -20.0] as LatLngExpression}
+            zoom={3}
+            style={{ height: '100%', width: '100%', background: "hsl(var(--background))" }}
+            scrollWheelZoom={true}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            />
+            {regions.map((region) => (
+              <Marker
+                key={region.id}
+                position={region.position}
+                eventHandlers={{
+                  click: () => setSelectedRegion(region),
+                }}
+              >
+                <Popup>
+                  <div className="p-2 min-w-[200px]">
+                    <h3 className="font-bold text-base mb-1">{region.name}</h3>
+                    <p className="text-sm text-gray-600 mb-2">{region.market}</p>
+                    <p className="text-sm font-semibold">{region.price}</p>
+                    <Badge variant={getThreatBadgeVariant(region.threatLevel)} className="mt-2">
+                      {region.threatLevel.toUpperCase()}
+                    </Badge>
                   </div>
-                </AdvancedMarker>
-              ))}
-            </Map>
-          </APIProvider>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
         </div>
 
         <div className="space-y-4">
