@@ -5,7 +5,7 @@ import { PriceForecast } from "@/components/Dashboard/PriceForecast";
 import { AlertFeed } from "@/components/Dashboard/AlertFeed";
 import { CorrelationChart } from "@/components/Dashboard/CorrelationChart";
 import { RegionalMap } from "@/components/Dashboard/RegionalMap";
-import { Zap, DollarSign, Fuel, Shield, Globe } from "lucide-react";
+import { Zap, DollarSign, Fuel, Shield, Globe, Wind, Sun } from "lucide-react";
 
 const Index = () => {
   return (
@@ -14,7 +14,7 @@ const Index = () => {
       
       <main className="container mx-auto px-6 py-8">
         {/* Market Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
           <MetricCard
             title="Electricity (PJM)"
             value="$46.80"
@@ -44,6 +44,26 @@ const Index = () => {
             gradient="primary"
             subtitle="per MMBtu"
             marketId="natgas"
+          />
+          <MetricCard
+            title="Wind Energy"
+            value="$28.50"
+            change="1.2%"
+            changeType="up"
+            icon={Wind}
+            gradient="primary"
+            subtitle="per MWh"
+            marketId="wind"
+          />
+          <MetricCard
+            title="Solar Energy"
+            value="$32.90"
+            change="0.8%"
+            changeType="up"
+            icon={Sun}
+            gradient="primary"
+            subtitle="per MWh"
+            marketId="solar"
           />
         </div>
 
