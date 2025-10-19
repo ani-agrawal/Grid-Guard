@@ -211,28 +211,82 @@ const Index = () => {
             <ThreatAssetLinker />
 
             {/* Real-time Threat Gauges */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {riskScores && riskScores.map((regionRisk) => (
-                <ThreatGauge
-                  key={regionRisk.id}
-                  title={`Cyber Threat Index - ${regionRisk.region}`}
-                  level={regionRisk.cpsi >= 80 ? "critical" : regionRisk.cpsi >= 60 ? "elevated" : "moderate"}
-                  score={Math.round(regionRisk.cpsi)}
-                  description={`CPSI: ${regionRisk.cpsi.toFixed(1)} | ECS: ${regionRisk.ecs.toFixed(1)} | Impact Probability: ${(regionRisk.impact_probability * 100).toFixed(0)}%`}
-                  type="cyber"
-                />
-              ))}
-              <ThreatGauge
-                title="Geopolitical Risk Index"
-                level={geoScore >= 80 ? "critical" : geoScore >= 60 ? "high" : "moderate"}
-                score={geoScore}
-                description={
-                  riskScores && riskScores.length > 0
-                    ? `Average GEI across ${riskScores.length} monitored regions. Maritime and infrastructure risk elevated.`
-                    : "Monitoring geopolitical events affecting energy markets."
-                }
-                type="geopolitical"
-              />
+            <div className="space-y-8">
+              {/* Electricity Markets */}
+              {energyData?.energyPrices && (
+                <>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Electricity Markets - Cyber Threat Index</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {energyData.energyPrices
+                        .filter(price => price.marketType === "Electricity")
+                        .map((price) => {
+                          const regionRisk = riskScores?.find(r => r.region.toLowerCase() === price.region.toLowerCase());
+                          const cpsi = regionRisk?.cpsi || 50;
+                          const ecs = regionRisk?.ecs || 75;
+                          const impactProb = regionRisk?.impact_probability || 0.35;
+                          
+                          return (
+                            <ThreatGauge
+                              key={price.region}
+                              title={`${price.region}`}
+                              level={cpsi >= 80 ? "critical" : cpsi >= 60 ? "elevated" : "moderate"}
+                              score={Math.round(cpsi)}
+                              description={`CPSI: ${cpsi.toFixed(1)} | ECS: ${ecs.toFixed(1)} | Impact Probability: ${(impactProb * 100).toFixed(0)}%`}
+                              type="cyber"
+                            />
+                          );
+                        })}
+                    </div>
+                  </div>
+
+                  {/* Oil & Gas Markets */}
+                  {energyData.energyPrices.some(p => p.marketType !== "Electricity") && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground mb-4">Oil & Gas Markets - Cyber Threat Index</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {energyData.energyPrices
+                          .filter(price => price.marketType !== "Electricity")
+                          .map((price) => {
+                            const regionRisk = riskScores?.find(r => r.region.toLowerCase() === price.region.toLowerCase());
+                            const cpsi = regionRisk?.cpsi || 45;
+                            const ecs = regionRisk?.ecs || 70;
+                            const impactProb = regionRisk?.impact_probability || 0.30;
+                            
+                            return (
+                              <ThreatGauge
+                                key={price.region}
+                                title={`${price.region}`}
+                                level={cpsi >= 80 ? "critical" : cpsi >= 60 ? "elevated" : "moderate"}
+                                score={Math.round(cpsi)}
+                                description={`CPSI: ${cpsi.toFixed(1)} | ECS: ${ecs.toFixed(1)} | Impact Probability: ${(impactProb * 100).toFixed(0)}%`}
+                                type="cyber"
+                              />
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Geopolitical Risk Index */}
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-4">Geopolitical Risk</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <ThreatGauge
+                    title="Global Geopolitical Risk Index"
+                    level={geoScore >= 80 ? "critical" : geoScore >= 60 ? "high" : "moderate"}
+                    score={geoScore}
+                    description={
+                      riskScores && riskScores.length > 0
+                        ? `Average GEI across ${riskScores.length} monitored regions. Maritime and infrastructure risk elevated.`
+                        : "Monitoring geopolitical events affecting energy markets."
+                    }
+                    type="geopolitical"
+                  />
+                </div>
+              </div>
             </div>
 
             <CorrelationChart />
