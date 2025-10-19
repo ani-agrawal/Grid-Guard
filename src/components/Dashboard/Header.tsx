@@ -3,10 +3,12 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { useNavigate } from "react-router-dom";
 import { useForecastAccuracy } from "@/hooks/useForecastAccuracy";
+import { useAlertData } from "@/hooks/useAlertData";
 
 export const DashboardHeader = () => {
   const navigate = useNavigate();
   const { accuracy } = useForecastAccuracy();
+  const { alertCount } = useAlertData();
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -47,7 +49,9 @@ export const DashboardHeader = () => {
                 className="flex items-center gap-2 hover:opacity-70 transition-opacity cursor-pointer"
               >
                 <AlertTriangle className="h-4 w-4 text-warning" />
-                <span className="text-foreground font-medium">3 Active Alerts</span>
+                <span className="text-foreground font-medium">
+                  {alertCount > 0 ? `${alertCount} Active Alert${alertCount !== 1 ? 's' : ''}` : 'No Active Alerts'}
+                </span>
               </button>
             </div>
             <CurrencySelector />

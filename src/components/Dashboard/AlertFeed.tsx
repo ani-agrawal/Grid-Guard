@@ -1,46 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { AlertTriangle, Info, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCVEData } from "@/hooks/useCVEData";
-
-interface Alert {
-  id: number;
-  type: "critical" | "warning" | "info";
-  title: string;
-  description: string;
-  time: string;
-  incidentId?: string;
-  relatedMarkets?: string[];
-}
-
-const alerts: Alert[] = [
-  {
-    id: 1,
-    type: "critical",
-    title: "Ransomware Activity Detected",
-    description: "Elevated OT targeting in Gulf Coast utilities sector",
-    time: "2m ago",
-    incidentId: "INC-001",
-    relatedMarkets: ["ERCOT", "Henry Hub"],
-  },
-  {
-    id: 2,
-    type: "warning",
-    title: "Iran-Israel Proxy Escalation",
-    description: "Maritime port systems showing increased reconnaissance",
-    time: "15m ago",
-    incidentId: "INC-002",
-    relatedMarkets: ["Brent Crude"],
-  },
-  {
-    id: 3,
-    type: "info",
-    title: "ERCOT Price Normalization",
-    description: "Grid stability restored, volatility decreasing",
-    time: "1h ago",
-    relatedMarkets: ["ERCOT"],
-  },
-];
+import { useAlertData } from "@/hooks/useAlertData";
 
 const alertConfig = {
   critical: {
@@ -61,75 +22,43 @@ const alertConfig = {
 };
 
 export const AlertFeed = () => {
-  const { data: cveData, isLoading } = useCVEData();
+  const { alerts, isLoading, error } = useAlertData();
 
-  // Generate alerts from CVE data
-  const liveAlerts: Alert[] = [];
-  
-  if (cveData?.cisaKev) {
-    cveData.cisaKev.slice(0, 2).forEach((kev: any, idx: number) => {
-      const kevDate = new Date(kev.dateAdded);
-      const now = new Date();
-      const diffMs = now.getTime() - kevDate.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-      
-      let timeDisplay = '';
-      if (diffMins < 1) timeDisplay = 'Just now';
-      else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
-      else if (diffMins < 1440) timeDisplay = `${Math.floor(diffMins / 60)}h ago`;
-      else timeDisplay = `${Math.floor(diffMins / 1440)}d ago`;
-      
-      liveAlerts.push({
-        id: idx + 1,
-        type: kev.severity === 'critical' ? 'critical' : 'warning',
-        title: `${kev.vendor} Vulnerability Detected`,
-        description: kev.title.substring(0, 60) + '...',
-        time: timeDisplay,
-        incidentId: `CVE-${idx + 1}`,
-        relatedMarkets: ["PJM", "CAISO"],
-      });
-    });
+  if (error) {
+    return (
+      <Card className="p-6 bg-gradient-card border-border">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-foreground">
+            Active Alerts
+          </h3>
+        </div>
+        <div className="text-center py-8 text-muted-foreground">
+          <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <p>Unable to load alerts. Please try again later.</p>
+        </div>
+      </Card>
+    );
   }
-
-  if (cveData?.malwareFamilies?.[0]) {
-    const malware = cveData.malwareFamilies[0];
-    liveAlerts.push({
-      id: liveAlerts.length + 1,
-      type: malware.severity === 'critical' ? 'critical' : 'warning',
-      title: `${malware.name} Activity Detected`,
-      description: `Targeting ${malware.targetSector} infrastructure`,
-      time: malware.lastSeen,
-      incidentId: `MAL-${liveAlerts.length + 1}`,
-      relatedMarkets: ["ERCOT", "Henry Hub"],
-    });
-  }
-
-  const now = new Date();
-  const utcTime = now.toISOString().substring(11, 19);
-  
-  // Add a market info alert
-  liveAlerts.push({
-    id: liveAlerts.length + 1,
-    type: 'info',
-    title: 'Threat Intelligence Updated',
-    description: `${cveData?.totalCVEs || 0} vulnerabilities monitored · As of ${utcTime} UTC`,
-    time: cveData?.lastUpdated ? `${Math.floor((now.getTime() - new Date(cveData.lastUpdated).getTime()) / 60000)}m ago` : '0m ago'
-  });
-
-  const displayAlerts = liveAlerts.length > 0 ? liveAlerts : alerts;
 
   return (
     <Card className="p-6 bg-gradient-card border-border">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-foreground">
-          Active Alerts
+          Active Alerts {alerts.length > 0 && `(${alerts.length})`}
         </h3>
         {isLoading && (
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
         )}
       </div>
-      <div className="space-y-3">
-        {displayAlerts.map((alert) => {
+      
+      {alerts.length === 0 && !isLoading ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <Info className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <p>No active alerts at this time</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {alerts.map((alert) => {
           const config = alertConfig[alert.type];
           const Icon = config.icon;
           return (
@@ -166,7 +95,8 @@ export const AlertFeed = () => {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
     </Card>
   );
 };
