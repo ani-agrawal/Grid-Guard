@@ -1,8 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useRiskScores } from "@/hooks/useRiskScores";
-import { Activity, TrendingUp, AlertTriangle, Shield } from "lucide-react";
+import { Activity, TrendingUp, AlertTriangle, Shield, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const scoreColors = {
@@ -43,9 +44,10 @@ export const RiskScoreCards = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {scores.slice(0, 3).map((score) => (
-        <Card key={score.id} className="bg-gradient-card border-border">
+    <TooltipProvider>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {scores.slice(0, 3).map((score) => (
+          <Card key={score.id} className="bg-gradient-card border-border">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>{score.region}</span>
@@ -83,6 +85,15 @@ export const RiskScoreCards = () => {
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 text-cyber" />
                   <span className="text-sm font-medium">CPSI</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="font-semibold mb-1">Cyber Price Shock Index</p>
+                      <p className="text-xs">Range: 0-100. Measures vulnerability to cyber incidents affecting energy infrastructure. Factors: CVE prevalence, OT/ICS targeting, ransomware activity. Decays over 72h unless refreshed.</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <span className={cn("text-lg font-bold", scoreColors[getScoreLevel(score.cpsi)])}>
                   {score.cpsi.toFixed(1)}
@@ -102,6 +113,15 @@ export const RiskScoreCards = () => {
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-geopolitical" />
                   <span className="text-sm font-medium">GEI</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="font-semibold mb-1">Geopolitical Escalation Index</p>
+                      <p className="text-xs">Range: 0-100. Tracks political tensions, sanctions, maritime incidents, and infrastructure sabotage. Weighted by proximity to major energy corridors. 48h decay.</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <span className={cn("text-lg font-bold", scoreColors[getScoreLevel(score.gei)])}>
                   {score.gei.toFixed(1)}
@@ -121,6 +141,15 @@ export const RiskScoreCards = () => {
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-warning" />
                   <span className="text-sm font-medium">ECS</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="font-semibold mb-1">Energy Criticality Score</p>
+                      <p className="text-xs">Range: 0-100. Infrastructure dependency measure combining asset concentration, spare capacity, and seasonal demand. Higher = single points of failure. Example: 85 = 1 refinery outage → ≥15% price spike.</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <span className={cn("text-lg font-bold", scoreColors[getScoreLevel(score.ecs)])}>
                   {score.ecs.toFixed(1)}
@@ -148,7 +177,8 @@ export const RiskScoreCards = () => {
             </div>
           </CardContent>
         </Card>
-      ))}
-    </div>
+        ))}
+      </div>
+    </TooltipProvider>
   );
 };

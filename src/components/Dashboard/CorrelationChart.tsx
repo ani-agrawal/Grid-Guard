@@ -42,7 +42,7 @@ export const CorrelationChart = () => {
     return (
       <Card className="p-6 bg-gradient-card border-border">
         <h3 className="text-lg font-semibold text-foreground mb-4">
-          Risk Correlation - 24h View
+          Risk Indices - 24h View
         </h3>
         <Skeleton className="w-full h-[300px]" />
       </Card>
@@ -52,7 +52,7 @@ export const CorrelationChart = () => {
   return (
     <Card className="p-6 bg-gradient-card border-border">
       <h3 className="text-lg font-semibold text-foreground mb-4">
-        Risk Correlation - 24h View
+        Risk Indices - 24h View
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>

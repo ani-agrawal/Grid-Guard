@@ -78,7 +78,7 @@ const Index = () => {
               <MetricCard
                 title="Electricity (PJM)"
                 value={pjmData ? convertPrice(pjmData.price) : convertPrice(46.80)}
-                change={pjmData ? `${Math.abs(pjmData.change).toFixed(1)}%` : "2.4%"}
+                change={pjmData ? `${pjmData.change.toFixed(1)}%` : "2.4%"}
                 changeType={pjmData && pjmData.change >= 0 ? "up" : "down"}
                 icon={Zap}
                 gradient="primary"
@@ -98,7 +98,7 @@ const Index = () => {
               <MetricCard
                 title="Natural Gas (Henry Hub)"
                 value={henryHubData ? convertPrice(henryHubData.price) : convertPrice(3.45)}
-                change={henryHubData ? `${Math.abs(henryHubData.change).toFixed(1)}%` : "1.8%"}
+                change={henryHubData ? `${henryHubData.change.toFixed(1)}%` : "1.8%"}
                 changeType={henryHubData && henryHubData.change >= 0 ? "up" : "down"}
                 icon={Fuel}
                 gradient="primary"
@@ -108,7 +108,7 @@ const Index = () => {
               <MetricCard
                 title="Electricity (CAISO)"
                 value={caiso ? convertPrice(caiso.price) : convertPrice(28.50)}
-                change={caiso ? `${Math.abs(caiso.change).toFixed(1)}%` : "1.2%"}
+                change={caiso ? `${caiso.change.toFixed(1)}%` : "1.2%"}
                 changeType={caiso && caiso.change >= 0 ? "up" : "down"}
                 icon={Wind}
                 gradient="primary"
@@ -118,7 +118,7 @@ const Index = () => {
               <MetricCard
                 title="Electricity (ERCOT)"
                 value={ercot ? convertPrice(ercot.price) : convertPrice(32.90)}
-                change={ercot ? `${Math.abs(ercot.change).toFixed(1)}%` : "0.8%"}
+                change={ercot ? `${ercot.change.toFixed(1)}%` : "0.8%"}
                 changeType={ercot && ercot.change >= 0 ? "up" : "down"}
                 icon={Sun}
                 gradient="primary"

@@ -57,8 +57,8 @@ export const MetricCard = ({
                   changeType === "neutral" && "text-muted-foreground"
                 )}
               >
-                {changeType === "up" && "↑"}
-                {changeType === "down" && "↓"}
+                {changeType === "up" && "↑ +"}
+                {changeType === "down" && "↓ "}
                 {change}
               </span>
             </div>

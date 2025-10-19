@@ -87,7 +87,7 @@ export const PriceForecast = () => {
                     )}
                   >
                     {forecast.change > 0 ? "+" : ""}
-                    {forecast.change}%
+                    {forecast.change.toFixed(1)}%
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">

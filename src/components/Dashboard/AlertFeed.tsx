@@ -61,14 +61,23 @@ export const AlertFeed = () => {
   
   if (cveData?.cisaKev) {
     cveData.cisaKev.slice(0, 2).forEach((kev: any, idx: number) => {
+      const kevDate = new Date(kev.dateAdded);
+      const now = new Date();
+      const diffMs = now.getTime() - kevDate.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      
+      let timeDisplay = '';
+      if (diffMins < 1) timeDisplay = 'Just now';
+      else if (diffMins < 60) timeDisplay = `${diffMins}m ago`;
+      else if (diffMins < 1440) timeDisplay = `${Math.floor(diffMins / 60)}h ago`;
+      else timeDisplay = `${Math.floor(diffMins / 1440)}d ago`;
+      
       liveAlerts.push({
         id: idx + 1,
         type: kev.severity === 'critical' ? 'critical' : 'warning',
         title: `${kev.vendor} Vulnerability Detected`,
         description: kev.title.substring(0, 60) + '...',
-        time: new Date(kev.dateAdded).toLocaleDateString() === new Date().toLocaleDateString() 
-          ? 'Today' 
-          : new Date(kev.dateAdded).toLocaleDateString()
+        time: timeDisplay
       });
     });
   }
@@ -84,13 +93,16 @@ export const AlertFeed = () => {
     });
   }
 
+  const now = new Date();
+  const utcTime = now.toISOString().substring(11, 19);
+  
   // Add a market info alert
   liveAlerts.push({
     id: liveAlerts.length + 1,
     type: 'info',
     title: 'Threat Intelligence Updated',
-    description: `${cveData?.totalCVEs || 0} vulnerabilities monitored`,
-    time: cveData?.lastUpdated ? new Date(cveData.lastUpdated).toLocaleTimeString() : 'Recently'
+    description: `${cveData?.totalCVEs || 0} vulnerabilities monitored · As of ${utcTime} UTC`,
+    time: cveData?.lastUpdated ? `${Math.floor((now.getTime() - new Date(cveData.lastUpdated).getTime()) / 60000)}m ago` : '0m ago'
   });
 
   const displayAlerts = liveAlerts.length > 0 ? liveAlerts : alerts;
