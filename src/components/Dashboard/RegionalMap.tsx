@@ -1,7 +1,4 @@
-import { useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import type { LatLngExpression } from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown } from "lucide-react";
@@ -9,7 +6,7 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 interface RegionData {
   id: string;
   name: string;
-  position: LatLngExpression;
+  position: [number, number];
   market: string;
   price: string;
   change: number;
@@ -80,8 +77,81 @@ const regions: RegionData[] = [
   },
 ];
 
+// Leaflet map component that loads only on client side
+const LeafletMap = ({ selectedRegion, setSelectedRegion }: { 
+  selectedRegion: RegionData | null; 
+  setSelectedRegion: (region: RegionData | null) => void;
+}) => {
+  useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+
+    // Dynamically import leaflet and its CSS
+    Promise.all([
+      import('leaflet'),
+      import('leaflet/dist/leaflet.css')
+    ]).then(([L]) => {
+      // Remove existing map if any
+      const container = document.getElementById('map-container');
+      if (!container) return;
+      
+      // Clear previous map
+      container.innerHTML = '';
+
+      // Create map
+      const map = L.map('map-container').setView([35.0, -20.0], 3);
+
+      // Add tile layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(map);
+
+      // Add markers
+      regions.forEach((region) => {
+        const color = region.threatLevel === "high" ? "#ef4444" : 
+                     region.threatLevel === "medium" ? "#f59e0b" : "#10b981";
+        
+        const customIcon = L.divIcon({
+          html: `<div style="width: 24px; height: 24px; background: ${color}; border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>`,
+          className: '',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        });
+
+        const marker = L.marker(region.position as [number, number], { icon: customIcon })
+          .addTo(map)
+          .bindPopup(`
+            <div style="padding: 8px; min-width: 200px;">
+              <h3 style="font-weight: bold; margin-bottom: 4px;">${region.name}</h3>
+              <p style="font-size: 14px; color: #666; margin-bottom: 8px;">${region.market}</p>
+              <p style="font-size: 14px; font-weight: 600;">${region.price}</p>
+              <span style="display: inline-block; margin-top: 8px; padding: 2px 8px; background: ${color}; color: white; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                ${region.threatLevel.toUpperCase()}
+              </span>
+            </div>
+          `);
+
+        marker.on('click', () => {
+          setSelectedRegion(region);
+        });
+      });
+
+      return () => {
+        map.remove();
+      };
+    });
+  }, [setSelectedRegion]);
+
+  return <div id="map-container" style={{ width: '100%', height: '100%' }} />;
+};
+
 export const RegionalMap = () => {
   const [selectedRegion, setSelectedRegion] = useState<RegionData | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const getThreatBadgeVariant = (level: string): "destructive" | "secondary" | "outline" => {
     switch (level) {
@@ -101,38 +171,14 @@ export const RegionalMap = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 rounded-lg overflow-hidden h-[600px] border border-primary/20">
-          <MapContainer
-            center={[35.0, -20.0] as LatLngExpression}
-            zoom={3}
-            style={{ height: '100%', width: '100%', background: "hsl(var(--background))" }}
-            scrollWheelZoom={true}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            />
-            {regions.map((region) => (
-              <Marker
-                key={region.id}
-                position={region.position}
-                eventHandlers={{
-                  click: () => setSelectedRegion(region),
-                }}
-              >
-                <Popup>
-                  <div className="p-2 min-w-[200px]">
-                    <h3 className="font-bold text-base mb-1">{region.name}</h3>
-                    <p className="text-sm text-gray-600 mb-2">{region.market}</p>
-                    <p className="text-sm font-semibold">{region.price}</p>
-                    <Badge variant={getThreatBadgeVariant(region.threatLevel)} className="mt-2">
-                      {region.threatLevel.toUpperCase()}
-                    </Badge>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+        <div className="lg:col-span-2 rounded-lg overflow-hidden h-[600px] border border-primary/20 bg-background">
+          {isMounted ? (
+            <LeafletMap selectedRegion={selectedRegion} setSelectedRegion={setSelectedRegion} />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <p className="text-muted-foreground">Loading map...</p>
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
