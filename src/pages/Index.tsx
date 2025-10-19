@@ -13,6 +13,7 @@ import { useEnergyPrices } from "@/hooks/useEnergyPrices";
 import { useCVEData } from "@/hooks/useCVEData";
 import { useRiskScores } from "@/hooks/useRiskScores";
 import { useCurrencyConversion } from "@/hooks/useCurrencyConversion";
+import { useForecastAccuracy } from "@/hooks/useForecastAccuracy";
 import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -21,6 +22,7 @@ const Index = () => {
   const { data: cveData } = useCVEData();
   const { data: riskScores } = useRiskScores();
   const { convertPrice } = useCurrencyConversion();
+  const { accuracy: forecastAccuracy } = useForecastAccuracy();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "markets");
 
@@ -43,10 +45,6 @@ const Index = () => {
   
   const geoScore = riskScores ? 
     Math.round(riskScores.reduce((sum, s) => sum + s.gei, 0) / riskScores.length) : 68;
-
-  // Calculate forecast accuracy (comparing actual vs predicted trends)
-  const forecastAccuracy = energyData?.energyPrices ? 
-    (85 + Math.random() * 10).toFixed(2) : "92.00";
 
   // Count active regions
   const activeRegions = energyData?.energyPrices?.length || 24;

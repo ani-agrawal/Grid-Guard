@@ -153,13 +153,16 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: {
 
   // Monitor theme changes
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    setCurrentTheme(savedTheme || 'dark');
-
-    const observer = new MutationObserver(() => {
+    const updateTheme = () => {
       const isDark = document.documentElement.classList.contains('dark');
-      setCurrentTheme(isDark ? 'dark' : 'light');
-    });
+      const newTheme = isDark ? 'dark' : 'light';
+      setCurrentTheme(newTheme);
+    };
+
+    // Set initial theme
+    updateTheme();
+
+    const observer = new MutationObserver(updateTheme);
     
     observer.observe(document.documentElement, {
       attributes: true,
@@ -205,16 +208,49 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: {
       container.innerHTML = '';
 
       // Create map
-      const map = L.map('map-container').setView([20.0, 0.0], 2);
+      const map = L.map('map-container', {
+        zoomControl: true
+      }).setView([20.0, 0.0], 2);
       mapRef.current = map;
 
-      // Add initial tile layer
-      const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 20
-      }).addTo(map);
+      // Get current theme
+      const isDark = document.documentElement.classList.contains('dark');
+      const initialTheme = isDark ? 'dark' : 'light';
+
+      // Add initial tile layer based on theme
+      const tileLayer = initialTheme === 'dark'
+        ? L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+          })
+        : L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+          });
+      
+      tileLayer.addTo(map);
       tileLayerRef.current = tileLayer;
+
+      // Add custom zoom control styling
+      const addZoomControlStyles = () => {
+        const zoomControls = container.querySelectorAll('.leaflet-control-zoom a');
+        zoomControls.forEach((control) => {
+          const element = control as HTMLElement;
+          if (initialTheme === 'dark') {
+            element.style.backgroundColor = '#1f2937';
+            element.style.color = '#f3f4f6';
+            element.style.borderColor = '#374151';
+          } else {
+            element.style.backgroundColor = '#ffffff';
+            element.style.color = '#1f2937';
+            element.style.borderColor = '#e5e7eb';
+          }
+        });
+      };
+
+      // Apply styles after a short delay to ensure controls are rendered
+      setTimeout(addZoomControlStyles, 100);
 
       // Add markers
       regions.forEach((region) => {
@@ -259,7 +295,7 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: {
     };
   }, [setSelectedRegion]);
 
-  // Update tile layer when theme changes
+  // Update tile layer and controls when theme changes
   useEffect(() => {
     if (!mapRef.current || !tileLayerRef.current) return;
 
@@ -283,6 +319,24 @@ const LeafletMap = ({ regions, selectedRegion, setSelectedRegion }: {
       
       newTileLayer.addTo(mapRef.current);
       tileLayerRef.current = newTileLayer;
+
+      // Update zoom control styles
+      const container = document.getElementById('map-container');
+      if (container) {
+        const zoomControls = container.querySelectorAll('.leaflet-control-zoom a');
+        zoomControls.forEach((control) => {
+          const element = control as HTMLElement;
+          if (currentTheme === 'dark') {
+            element.style.backgroundColor = '#1f2937';
+            element.style.color = '#f3f4f6';
+            element.style.borderColor = '#374151';
+          } else {
+            element.style.backgroundColor = '#ffffff';
+            element.style.color = '#1f2937';
+            element.style.borderColor = '#e5e7eb';
+          }
+        });
+      }
     });
   }, [currentTheme]);
 

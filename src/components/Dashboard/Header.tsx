@@ -2,9 +2,11 @@ import { Activity, AlertTriangle, TrendingUp } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { useNavigate } from "react-router-dom";
+import { useForecastAccuracy } from "@/hooks/useForecastAccuracy";
 
 export const DashboardHeader = () => {
   const navigate = useNavigate();
+  const { accuracy } = useForecastAccuracy();
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -35,7 +37,7 @@ export const DashboardHeader = () => {
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-success" />
-                <span className="text-foreground font-medium">92% Accuracy</span>
+                <span className="text-foreground font-medium">{accuracy}% Accuracy</span>
               </div>
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-warning" />
