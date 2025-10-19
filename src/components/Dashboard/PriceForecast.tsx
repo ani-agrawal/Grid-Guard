@@ -25,33 +25,41 @@ interface RegionForecast {
   currentPrice: number;
 }
 
-type TimeInterval = '15min' | '30min' | '1h' | '2h' | '4h' | '6h' | '12h';
+type TimeInterval = '30s' | '1min' | '5min' | '15min' | '30min' | '1h' | '3h' | '6h' | '8h' | '12h' | '24h';
 
 const intervalMinutes: Record<TimeInterval, number> = {
+  '30s': 0.5,
+  '1min': 1,
+  '5min': 5,
   '15min': 15,
   '30min': 30,
   '1h': 60,
-  '2h': 120,
-  '4h': 240,
+  '3h': 180,
   '6h': 360,
+  '8h': 480,
   '12h': 720,
+  '24h': 1440,
 };
 
 const intervalLabels: Record<TimeInterval, string> = {
+  '30s': '30 Seconds',
+  '1min': '1 Minute',
+  '5min': '5 Minutes',
   '15min': '15 Minutes',
   '30min': '30 Minutes',
   '1h': '1 Hour',
-  '2h': '2 Hours',
-  '4h': '4 Hours',
+  '3h': '3 Hours',
   '6h': '6 Hours',
+  '8h': '8 Hours',
   '12h': '12 Hours',
+  '24h': '24 Hours',
 };
 
 export const PriceForecast = () => {
   const { data, isLoading } = useEnergyPrices();
   const { convertPrice } = useCurrencyConversion();
   const [showAdjusted, setShowAdjusted] = useState(true);
-  const [timeInterval, setTimeInterval] = useState<TimeInterval>('15min');
+  const [timeInterval, setTimeInterval] = useState<TimeInterval>('1min');
 
   const generateForecasts = (): RegionForecast[] => {
     if (!data?.energyPrices) return [];
@@ -73,6 +81,9 @@ export const PriceForecast = () => {
         let timeStr: string;
         if (i === 0) {
           timeStr = 'Now';
+        } else if (minutes < 1) {
+          const seconds = i * minutes * 60;
+          timeStr = `+${seconds}s`;
         } else if (minutes < 60) {
           timeStr = `+${i * minutes}m`;
         } else if (minutes === 60) {
