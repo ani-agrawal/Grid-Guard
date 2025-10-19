@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Newspaper, TrendingUp, Shield, AlertTriangle } from "lucide-react";
+import { Newspaper, TrendingUp, Shield, AlertTriangle, ExternalLink } from "lucide-react";
 
 interface NewsArticle {
   id: string;
@@ -12,6 +12,7 @@ interface NewsArticle {
   source: string;
   publishedAt: string;
   region: string;
+  url: string;
 }
 
 const newsData: NewsArticle[] = [
@@ -23,7 +24,8 @@ const newsData: NewsArticle[] = [
     impact: "high",
     source: "Reuters Energy",
     publishedAt: "2 hours ago",
-    region: "UK"
+    region: "UK",
+    url: "https://www.reuters.com/business/energy/north-sea-oil-production-storm-2024"
   },
   {
     id: "2",
@@ -33,7 +35,8 @@ const newsData: NewsArticle[] = [
     impact: "high",
     source: "CyberSecurity Today",
     publishedAt: "4 hours ago",
-    region: "EU"
+    region: "EU",
+    url: "https://www.cybersecuritytoday.com/ransomware-european-grid-operators-2024"
   },
   {
     id: "3",
@@ -43,7 +46,8 @@ const newsData: NewsArticle[] = [
     impact: "medium",
     source: "Energy Intelligence",
     publishedAt: "6 hours ago",
-    region: "US"
+    region: "US",
+    url: "https://www.energyintel.com/texas-natural-gas-prices-cold-snap-2024"
   },
   {
     id: "4",
@@ -53,7 +57,8 @@ const newsData: NewsArticle[] = [
     impact: "high",
     source: "Bloomberg Energy",
     publishedAt: "8 hours ago",
-    region: "Global"
+    region: "Global",
+    url: "https://www.bloomberg.com/news/articles/opec-production-cuts-extension-2024"
   },
   {
     id: "5",
@@ -63,7 +68,8 @@ const newsData: NewsArticle[] = [
     impact: "medium",
     source: "Asia Energy Watch",
     publishedAt: "10 hours ago",
-    region: "Asia"
+    region: "Asia",
+    url: "https://www.asiaenergywatch.com/chinese-pipeline-ddos-attack-2024"
   },
   {
     id: "6",
@@ -73,7 +79,8 @@ const newsData: NewsArticle[] = [
     impact: "medium",
     source: "UK Power News",
     publishedAt: "12 hours ago",
-    region: "UK"
+    region: "UK",
+    url: "https://www.ukpowernews.com/electricity-grid-capacity-peak-demand-2024"
   },
   {
     id: "7",
@@ -83,7 +90,8 @@ const newsData: NewsArticle[] = [
     impact: "high",
     source: "Industrial Security Alert",
     publishedAt: "14 hours ago",
-    region: "Global"
+    region: "Global",
+    url: "https://www.industrialsecurityalert.com/zero-day-scada-vulnerability-2024"
   },
   {
     id: "8",
@@ -93,7 +101,8 @@ const newsData: NewsArticle[] = [
     impact: "medium",
     source: "DOE News",
     publishedAt: "1 day ago",
-    region: "US"
+    region: "US",
+    url: "https://www.energy.gov/articles/strategic-petroleum-reserve-release-2024"
   }
 ];
 
@@ -111,29 +120,34 @@ const getCategoryIcon = (category: string) => {
 };
 
 const NewsCard = ({ article }: { article: NewsArticle }) => (
-  <Card className="p-4 hover:shadow-md transition-shadow">
-    <div className="flex items-start gap-3">
-      <div className={`p-2 rounded-lg ${article.category === "energy" ? "bg-primary/10" : "bg-destructive/10"}`}>
-        {getCategoryIcon(article.category)}
-      </div>
-      <div className="flex-1">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="font-semibold text-base leading-tight">{article.title}</h3>
-          <Badge variant={getImpactColor(article.impact)} className="shrink-0">
-            {article.impact}
-          </Badge>
+  <a href={article.url} target="_blank" rel="noopener noreferrer" className="block">
+    <Card className="p-4 hover:shadow-md hover:border-primary/50 transition-all cursor-pointer group">
+      <div className="flex items-start gap-3">
+        <div className={`p-2 rounded-lg ${article.category === "energy" ? "bg-primary/10" : "bg-destructive/10"}`}>
+          {getCategoryIcon(article.category)}
         </div>
-        <p className="text-sm text-muted-foreground mb-3">{article.summary}</p>
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Newspaper className="h-3 w-3" />
-            {article.source}
-          </span>
-          <span>{article.publishedAt}</span>
+        <div className="flex-1">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <h3 className="font-semibold text-base leading-tight group-hover:text-primary transition-colors flex items-center gap-2">
+              {article.title}
+              <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </h3>
+            <Badge variant={getImpactColor(article.impact)} className="shrink-0">
+              {article.impact}
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground mb-3">{article.summary}</p>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Newspaper className="h-3 w-3" />
+              {article.source}
+            </span>
+            <span>{article.publishedAt}</span>
+          </div>
         </div>
       </div>
-    </div>
-  </Card>
+    </Card>
+  </a>
 );
 
 export const MajorNews = () => {
