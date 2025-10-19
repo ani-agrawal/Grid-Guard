@@ -8,6 +8,8 @@ import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ZoomIn, ZoomOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface TimeSeriesPoint {
   time: string;
@@ -60,6 +62,15 @@ export const PriceForecast = () => {
   const { convertPrice } = useCurrencyConversion();
   const [showAdjusted, setShowAdjusted] = useState(true);
   const [timeInterval, setTimeInterval] = useState<TimeInterval>('1min');
+  const [zoomLevel, setZoomLevel] = useState(100); // percentage of data to show
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.max(25, prev - 25));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.min(100, prev + 25));
+  };
 
   const generateForecasts = (): RegionForecast[] => {
     if (!data?.energyPrices) return [];
@@ -128,6 +139,12 @@ export const PriceForecast = () => {
 
   const forecasts = generateForecasts();
 
+  // Apply zoom level to data
+  const getZoomedData = (data: TimeSeriesPoint[]) => {
+    const pointsToShow = Math.ceil(data.length * (zoomLevel / 100));
+    return data.slice(0, pointsToShow);
+  };
+
   if (isLoading) {
     return (
       <Card className="p-6 bg-gradient-card border-border">
@@ -150,6 +167,28 @@ export const PriceForecast = () => {
           48h Price Forecasts
         </h3>
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 border border-border rounded-lg">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleZoomIn}
+              disabled={zoomLevel <= 25}
+              className="h-8 px-2"
+              title="Zoom In"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleZoomOut}
+              disabled={zoomLevel >= 100}
+              className="h-8 px-2"
+              title="Zoom Out"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+          </div>
           <div className="flex items-center gap-2">
             <Label htmlFor="time-interval" className="text-xs text-muted-foreground whitespace-nowrap">
               Interval:
@@ -206,7 +245,7 @@ export const PriceForecast = () => {
             </div>
             
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={forecast.data}>
+              <AreaChart data={getZoomedData(forecast.data)}>
                 <defs>
                   <linearGradient id="confidenceGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.5}/>
@@ -222,7 +261,7 @@ export const PriceForecast = () => {
                   dataKey="time" 
                   stroke="hsl(var(--muted-foreground))"
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                  interval={Math.max(1, Math.floor(forecast.data.length / 12))}
+                  interval={Math.max(1, Math.floor(getZoomedData(forecast.data).length / 12))}
                 />
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))"

@@ -4,6 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ZoomIn, ZoomOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import {
   LineChart,
@@ -66,6 +68,15 @@ export const ForecastChart = () => {
   const { data, isLoading } = useEnergyPrices();
   const [showAdjusted, setShowAdjusted] = useState(true);
   const [timeInterval, setTimeInterval] = useState<TimeInterval>('1h');
+  const [zoomLevel, setZoomLevel] = useState(100); // percentage of data to show
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.max(25, prev - 25));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.min(100, prev + 25));
+  };
 
   const generateForecastData = (basePrice: number, periods: number, minutes: number): ForecastData[] => {
     const data: ForecastData[] = [];
@@ -133,6 +144,12 @@ export const ForecastChart = () => {
   const nowcastData = generateForecastData(basePrice, totalPoints, minutes);
   const forecastData = generateForecastData(basePrice, 7, 1440); // 7 days with 24h intervals
 
+  // Apply zoom level to data
+  const getZoomedData = (data: ForecastData[]) => {
+    const pointsToShow = Math.ceil(data.length * (zoomLevel / 100));
+    return data.slice(0, pointsToShow);
+  };
+
   if (isLoading) {
     return (
       <Card className="p-6 bg-gradient-card border-border">
@@ -150,6 +167,28 @@ export const ForecastChart = () => {
           Price Forecasts with Confidence Bands
         </h3>
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 border border-border rounded-lg">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleZoomIn}
+              disabled={zoomLevel <= 25}
+              className="h-8 px-2"
+              title="Zoom In"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleZoomOut}
+              disabled={zoomLevel >= 100}
+              className="h-8 px-2"
+              title="Zoom Out"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+          </div>
           <div className="flex items-center gap-2">
             <Label htmlFor="time-interval" className="text-xs text-muted-foreground whitespace-nowrap">
               Interval:
@@ -196,7 +235,7 @@ export const ForecastChart = () => {
             </p>
           </div>
           <ResponsiveContainer width="100%" height={350}>
-            <AreaChart data={nowcastData}>
+            <AreaChart data={getZoomedData(nowcastData)}>
               <defs>
                 <linearGradient id="confidenceBandNow" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.5}/>
@@ -212,7 +251,7 @@ export const ForecastChart = () => {
                 dataKey="time"
                 stroke="hsl(var(--muted-foreground))"
                 style={{ fontSize: "12px" }}
-                interval={Math.max(1, Math.floor(nowcastData.length / 12))}
+                interval={Math.max(1, Math.floor(getZoomedData(nowcastData).length / 12))}
               />
               <YAxis
                 stroke="hsl(var(--muted-foreground))"
@@ -316,7 +355,7 @@ export const ForecastChart = () => {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={forecastData}>
+            <LineChart data={getZoomedData(forecastData)}>
               <defs>
                 <linearGradient id="forecastBand" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.5}/>
