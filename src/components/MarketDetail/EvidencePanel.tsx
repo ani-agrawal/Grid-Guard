@@ -78,7 +78,7 @@ const advisories: VendorAdvisory[] = [
     severity: "critical",
     date: "2025-10-19",
     affectedProducts: ["iFIX 6.5", "iFIX 7.0"],
-    url: "#",
+    url: "https://www.cisa.gov/news-events/ics-advisories",
   },
   {
     id: "2",
@@ -87,7 +87,25 @@ const advisories: VendorAdvisory[] = [
     severity: "high",
     date: "2025-10-18",
     affectedProducts: ["ControlLogix 5580", "CompactLogix 5380"],
-    url: "#",
+    url: "https://www.rockwellautomation.com/en-us/support/advisory.html",
+  },
+  {
+    id: "3",
+    vendor: "Schneider Electric",
+    title: "EcoStruxure Control Expert Security Update",
+    severity: "high",
+    date: "2025-10-17",
+    affectedProducts: ["EcoStruxure Control Expert"],
+    url: "https://www.se.com/ww/en/work/support/cybersecurity/security-notifications.jsp",
+  },
+  {
+    id: "4",
+    vendor: "Siemens",
+    title: "SIMATIC S7-1500 PLC Security Advisory",
+    severity: "critical",
+    date: "2025-10-16",
+    affectedProducts: ["SIMATIC S7-1500", "SIMATIC S7-1200"],
+    url: "https://www.siemens.com/cert/advisories",
   },
 ];
 
@@ -213,7 +231,15 @@ export const EvidencePanel = () => {
         
         <TabsContent value="kev" className="mt-0 space-y-3">
           <p className="text-sm text-muted-foreground mb-3">
-            Known Exploited Vulnerabilities affecting energy sector OT/ICS systems from Exploit-DB
+            Known Exploited Vulnerabilities affecting energy sector OT/ICS systems from{" "}
+            <a 
+              href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline inline-flex items-center gap-1"
+            >
+              CISA KEV <ExternalLink className="h-3 w-3 inline" />
+            </a>
           </p>
           {kevItemsData.map((item: any) => (
             <div
@@ -260,7 +286,11 @@ export const EvidencePanel = () => {
         
         <TabsContent value="advisories" className="mt-0 space-y-3">
           <p className="text-sm text-muted-foreground mb-3">
-            Vendor security advisories from Schneider, Siemens, GE, Rockwell, ABB
+            Vendor security advisories from{" "}
+            <a href="https://www.se.com/ww/en/work/support/cybersecurity/security-notifications.jsp" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Schneider</a>,{" "}
+            <a href="https://www.siemens.com/cert/advisories" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Siemens</a>,{" "}
+            <a href="https://www.cisa.gov/news-events/ics-advisories" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">GE</a>,{" "}
+            <a href="https://www.rockwellautomation.com/en-us/support/advisory.html" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Rockwell</a>, ABB
           </p>
           {advisoriesData.map((advisory: any) => (
             <div
@@ -305,7 +335,9 @@ export const EvidencePanel = () => {
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">{advisory.date}</span>
                 <a
-                  href={advisory.url}
+                  href={advisory.url || "https://www.cisa.gov/news-events/ics-advisories"}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-xs text-primary hover:underline flex items-center gap-1"
                 >
                   View Advisory <ExternalLink className="h-3 w-3" />
@@ -317,7 +349,15 @@ export const EvidencePanel = () => {
         
         <TabsContent value="malware" className="mt-0 space-y-3">
           <p className="text-sm text-muted-foreground mb-3">
-            Active malware families targeting energy infrastructure
+            Active malware families targeting energy infrastructure - Source:{" "}
+            <a 
+              href="https://attack.mitre.org/groups/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline inline-flex items-center gap-1"
+            >
+              MITRE ATT&CK <ExternalLink className="h-3 w-3 inline" />
+            </a>
           </p>
           {malwareNotesData.map((malware: any) => (
             <div
@@ -357,7 +397,15 @@ export const EvidencePanel = () => {
         
         <TabsContent value="analogs" className="mt-0 space-y-3">
           <p className="text-sm text-muted-foreground mb-3">
-            Top 5 historical incidents with similar threat profiles and realized market impact
+            Top 5 historical incidents with similar threat profiles and realized market impact - Source:{" "}
+            <a 
+              href="https://www.cisa.gov/resources-tools/resources/ics-cert-incident-response-summary-report" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline inline-flex items-center gap-1"
+            >
+              CISA ICS-CERT <ExternalLink className="h-3 w-3 inline" />
+            </a>
           </p>
           {historicalAnalogs.map((analog, index) => (
             <div
