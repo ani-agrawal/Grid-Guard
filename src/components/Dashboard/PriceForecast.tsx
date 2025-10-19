@@ -224,31 +224,41 @@ export const PriceForecast = () => {
       </div>
       
       <Tabs defaultValue={forecasts[0]?.region || "region-0"} className="w-full">
-        <div className="mb-4">
-          <div className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">
-            Electricity Markets
-          </div>
-          <TabsList className="grid w-full grid-cols-4 mb-4">
-            {forecasts.filter(f => f.marketType === "Electricity").map((forecast) => (
-              <TabsTrigger key={forecast.region} value={forecast.region}>
-                {forecast.region}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          
-          {forecasts.some(f => f.marketType !== "Electricity") && (
-            <>
-              <div className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">
-                Oil & Gas Markets
+        <div className="mb-6 space-y-6">
+          {/* Electricity Markets */}
+          {forecasts.filter(f => f.marketType === "Electricity").length > 0 && (
+            <div>
+              <div className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wide">
+                Electricity Markets
               </div>
-              <TabsList className="grid w-full grid-cols-4">
-                {forecasts.filter(f => f.marketType !== "Electricity").map((forecast) => (
-                  <TabsTrigger key={forecast.region} value={forecast.region}>
+              <TabsList className={`grid w-full mb-2`} style={{ 
+                gridTemplateColumns: `repeat(${Math.min(forecasts.filter(f => f.marketType === "Electricity").length, 4)}, minmax(0, 1fr))` 
+              }}>
+                {forecasts.filter(f => f.marketType === "Electricity").map((forecast) => (
+                  <TabsTrigger key={forecast.region} value={forecast.region} className="text-xs sm:text-sm">
                     {forecast.region}
                   </TabsTrigger>
                 ))}
               </TabsList>
-            </>
+            </div>
+          )}
+          
+          {/* Oil & Gas Markets */}
+          {forecasts.filter(f => f.marketType !== "Electricity").length > 0 && (
+            <div>
+              <div className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wide">
+                Oil & Gas Markets
+              </div>
+              <TabsList className={`grid w-full`} style={{ 
+                gridTemplateColumns: `repeat(${Math.min(forecasts.filter(f => f.marketType !== "Electricity").length, 4)}, minmax(0, 1fr))` 
+              }}>
+                {forecasts.filter(f => f.marketType !== "Electricity").map((forecast) => (
+                  <TabsTrigger key={forecast.region} value={forecast.region} className="text-xs sm:text-sm">
+                    {forecast.region}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
           )}
         </div>
         
