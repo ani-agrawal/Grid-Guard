@@ -23,7 +23,6 @@ const Index = () => {
   const { convertPrice } = useCurrencyConversion();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "markets");
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
   // Calculate real metrics from API data
   const getMarketData = (region: string) => {
@@ -69,25 +68,6 @@ const Index = () => {
       <DashboardHeader />
       
       <main className="container mx-auto px-6 py-8">
-        {selectedRegion && (
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">
-                Market Intelligence Dashboard
-              </h2>
-              <p className="text-muted-foreground">
-                Viewing data for selected region
-              </p>
-            </div>
-            <button
-              onClick={() => setSelectedRegion(null)}
-              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors font-medium text-sm"
-            >
-              ← Back to Map
-            </button>
-          </div>
-        )}
-
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="markets" className="flex items-center gap-2">
@@ -110,101 +90,88 @@ const Index = () => {
 
           {/* Markets Overview Tab */}
           <TabsContent value="markets" className="space-y-8">
-            {!selectedRegion ? (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <p className="text-muted-foreground text-lg">
-                    Select a region on the map to view detailed market intelligence and risk analysis
-                  </p>
-                </div>
-                <RegionalMap onRegionSelect={setSelectedRegion} />
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-                  <MetricCard
-                    title="Electricity (PJM)"
-                    value={pjmData ? convertPrice(pjmData.price) : convertPrice(46.80)}
-                    change={pjmData ? `${pjmData.change.toFixed(1)}%` : "2.4%"}
-                    changeType={pjmData && pjmData.change >= 0 ? "up" : "down"}
-                    icon={Zap}
-                    gradient="primary"
-                    subtitle="per MWh"
-                    marketId="pjm"
-                    source="PJM"
-                    lastUpdated={1}
-                  />
-                  <MetricCard
-                    title="Brent Crude"
-                    value={convertPrice(87.10)}
-                    change="3.2%"
-                    changeType="up"
-                    icon={DollarSign}
-                    gradient="primary"
-                    subtitle="per barrel"
-                    marketId="brent"
-                    source="EIA"
-                    lastUpdated={2}
-                  />
-                  <MetricCard
-                    title="Natural Gas (Henry Hub)"
-                    value={henryHubData ? convertPrice(henryHubData.price) : convertPrice(3.45)}
-                    change={henryHubData ? `${henryHubData.change.toFixed(1)}%` : "1.8%"}
-                    changeType={henryHubData && henryHubData.change >= 0 ? "up" : "down"}
-                    icon={Fuel}
-                    gradient="primary"
-                    subtitle="per MMBtu"
-                    marketId="natgas"
-                    source="EIA"
-                    lastUpdated={1}
-                  />
-                  <MetricCard
-                    title="Electricity (CAISO)"
-                    value={caiso ? convertPrice(caiso.price) : convertPrice(28.50)}
-                    change={caiso ? `${caiso.change.toFixed(1)}%` : "1.2%"}
-                    changeType={caiso && caiso.change >= 0 ? "up" : "down"}
-                    icon={Wind}
-                    gradient="primary"
-                    subtitle="per MWh"
-                    marketId="caiso"
-                    source="CAISO"
-                    lastUpdated={1}
-                  />
-                  <MetricCard
-                    title="Electricity (ERCOT)"
-                    value={ercot ? convertPrice(ercot.price) : convertPrice(32.90)}
-                    change={ercot ? `${ercot.change.toFixed(1)}%` : "0.8%"}
-                    changeType={ercot && ercot.change >= 0 ? "up" : "down"}
-                    icon={Sun}
-                    gradient="primary"
-                    subtitle="per MWh"
-                    marketId="ercot"
-                    source="ERCOT"
-                    lastUpdated={1}
-                  />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+              <MetricCard
+                title="Electricity (PJM)"
+                value={pjmData ? convertPrice(pjmData.price) : convertPrice(46.80)}
+                change={pjmData ? `${pjmData.change.toFixed(1)}%` : "2.4%"}
+                changeType={pjmData && pjmData.change >= 0 ? "up" : "down"}
+                icon={Zap}
+                gradient="primary"
+                subtitle="per MWh"
+                marketId="pjm"
+                source="PJM"
+                lastUpdated={1}
+              />
+              <MetricCard
+                title="Brent Crude"
+                value={convertPrice(87.10)}
+                change="3.2%"
+                changeType="up"
+                icon={DollarSign}
+                gradient="primary"
+                subtitle="per barrel"
+                marketId="brent"
+                source="EIA"
+                lastUpdated={2}
+              />
+              <MetricCard
+                title="Natural Gas (Henry Hub)"
+                value={henryHubData ? convertPrice(henryHubData.price) : convertPrice(3.45)}
+                change={henryHubData ? `${henryHubData.change.toFixed(1)}%` : "1.8%"}
+                changeType={henryHubData && henryHubData.change >= 0 ? "up" : "down"}
+                icon={Fuel}
+                gradient="primary"
+                subtitle="per MMBtu"
+                marketId="natgas"
+                source="EIA"
+                lastUpdated={1}
+              />
+              <MetricCard
+                title="Electricity (CAISO)"
+                value={caiso ? convertPrice(caiso.price) : convertPrice(28.50)}
+                change={caiso ? `${caiso.change.toFixed(1)}%` : "1.2%"}
+                changeType={caiso && caiso.change >= 0 ? "up" : "down"}
+                icon={Wind}
+                gradient="primary"
+                subtitle="per MWh"
+                marketId="caiso"
+                source="CAISO"
+                lastUpdated={1}
+              />
+              <MetricCard
+                title="Electricity (ERCOT)"
+                value={ercot ? convertPrice(ercot.price) : convertPrice(32.90)}
+                change={ercot ? `${ercot.change.toFixed(1)}%` : "0.8%"}
+                changeType={ercot && ercot.change >= 0 ? "up" : "down"}
+                icon={Sun}
+                gradient="primary"
+                subtitle="per MWh"
+                marketId="ercot"
+                source="ERCOT"
+                lastUpdated={1}
+              />
+            </div>
 
-                <RegionalMap />
+            <RegionalMap />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <MetricCard
-                    title="Forecast Accuracy"
-                    value={`${forecastAccuracy}%`}
-                    change="4.2%"
-                    changeType="up"
-                    icon={Shield}
-                    gradient="primary"
-                  />
-                  <MetricCard
-                    title="Active Regions"
-                    value={activeRegions.toString()}
-                    subtitle="Global coverage"
-                    icon={Globe}
-                    gradient="primary"
-                  />
-                </div>
-              </>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <MetricCard
+                title="Forecast Accuracy"
+                value={`${forecastAccuracy}%`}
+                change="4.2%"
+                changeType="up"
+                icon={Shield}
+                gradient="primary"
+              />
+              <MetricCard
+                title="Active Regions"
+                value={activeRegions.toString()}
+                subtitle="Global coverage"
+                icon={Globe}
+                gradient="primary"
+              />
+            </div>
           </TabsContent>
 
           {/* Risk Analysis Tab */}
