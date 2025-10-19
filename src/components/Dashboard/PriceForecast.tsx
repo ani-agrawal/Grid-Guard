@@ -79,7 +79,8 @@ export const PriceForecast = () => {
     const totalMinutes = 48 * 60; // 48 hours
     const totalPoints = Math.floor(totalMinutes / minutes) + 1;
     
-    return data.energyPrices.slice(0, 3).map(price => {
+    // Show all energy prices instead of just first 3
+    return data.energyPrices.map(price => {
       const timePoints: TimeSeriesPoint[] = [];
       const now = new Date();
       
@@ -223,13 +224,33 @@ export const PriceForecast = () => {
       </div>
       
       <Tabs defaultValue={forecasts[0]?.region || "region-0"} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-4">
-          {forecasts.map((forecast, idx) => (
-            <TabsTrigger key={forecast.region} value={forecast.region}>
-              {forecast.region}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="mb-4">
+          <div className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">
+            Electricity Markets
+          </div>
+          <TabsList className="grid w-full grid-cols-4 mb-4">
+            {forecasts.filter(f => f.marketType === "Electricity").map((forecast) => (
+              <TabsTrigger key={forecast.region} value={forecast.region}>
+                {forecast.region}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          
+          {forecasts.some(f => f.marketType !== "Electricity") && (
+            <>
+              <div className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">
+                Oil & Gas Markets
+              </div>
+              <TabsList className="grid w-full grid-cols-4">
+                {forecasts.filter(f => f.marketType !== "Electricity").map((forecast) => (
+                  <TabsTrigger key={forecast.region} value={forecast.region}>
+                    {forecast.region}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </>
+          )}
+        </div>
         
         {forecasts.map((forecast) => (
           <TabsContent key={forecast.region} value={forecast.region} className="space-y-4">
