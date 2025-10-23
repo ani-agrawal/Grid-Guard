@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      news_articles: {
+        Row: {
+          category: string
+          created_at: string
+          fetched_at: string
+          id: string
+          impact: string
+          published_at: string
+          source: string
+          summary: string
+          title: string
+          url: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          impact: string
+          published_at: string
+          source: string
+          summary: string
+          title: string
+          url: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          impact?: string
+          published_at?: string
+          source?: string
+          summary?: string
+          title?: string
+          url?: string
+        }
+        Relationships: []
+      }
       risk_scores: {
         Row: {
           calculated_at: string
