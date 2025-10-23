@@ -292,7 +292,19 @@ export const PriceForecast = () => {
                   dataKey="time" 
                   stroke="hsl(var(--muted-foreground))"
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                  interval={Math.max(1, Math.floor(getZoomedData(forecast.data).length / 12))}
+                  interval={(() => {
+                    const zoomedDataLength = getZoomedData(forecast.data).length;
+                    const minutes = intervalMinutes[timeInterval];
+                    
+                    // Calculate optimal interval based on time resolution
+                    // Aim to show labels every 4-6 hours for better readability
+                    const targetHoursPerLabel = zoomLevel <= 25 ? 2 : zoomLevel <= 50 ? 4 : 6;
+                    const targetMinutesPerLabel = targetHoursPerLabel * 60;
+                    const pointsPerLabel = Math.ceil(targetMinutesPerLabel / minutes);
+                    
+                    // Ensure we show at least 1 label and at most every point
+                    return Math.max(0, Math.min(pointsPerLabel - 1, zoomedDataLength - 1));
+                  })()}
                 />
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))"
